@@ -25,7 +25,7 @@ function App() {
         onNavItemClick={updateActiveFeature}
         activeNavItem={activeFeature}
       />
-      <InteractiveMap />
+      <InteractiveMap activeFeature={activeFeature} />
     </Box>
   );
 }
