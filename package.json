@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@deck.gl/core": "^9.1.13",
     "@deck.gl/layers": "^9.1.13",
     "@deck.gl/react": "^9.1.13",
     "@emotion/react": "^11.14.0",
@@ -18,13 +17,15 @@
     "@fontsource/roboto": "^5.2.6",
     "@mui/icons-material": "^7.2.0",
     "@mui/material": "^5.18.0",
+    "deck.gl": "^9.1.13",
     "mapbox-gl": "^3.13.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-map-gl": "^8.0.4"
+    "react-map-gl": "^7.0.17"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
+    "@types/geojson": "^7946.0.16",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
