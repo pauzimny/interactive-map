@@ -1,4 +1,11 @@
-import type { Feature, FeatureCollection, Point, Polygon } from "geojson";
+import type {
+  Feature,
+  FeatureCollection,
+  GeoJsonProperties,
+  Geometry,
+  Point,
+  Polygon,
+} from "geojson";
 import type { TGeoJSON, TLngLat } from "./context/GeoJSONProvider";
 import { GeoJsonLayer } from "deck.gl";
 
@@ -89,5 +96,20 @@ export const generatePinLayer = ({
     getPointRadius: 10,
     getFillColor: [0, 0, 255, 200],
     pointRadiusMinPixels: 5,
+  });
+};
+
+export const generateGeoJSONLayer = (
+  data: FeatureCollection<Geometry, GeoJsonProperties>
+) => {
+  return new GeoJsonLayer({
+    id: "loaded-geojson",
+    data,
+    pickable: true,
+    stroked: false,
+    filled: true,
+    pointRadiusMinPixels: 2,
+    getFillColor: [200, 0, 80, 180],
+    getPointRadius: 100,
   });
 };

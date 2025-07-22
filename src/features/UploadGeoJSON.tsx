@@ -1,13 +1,13 @@
-import { GeoJsonLayer } from "@deck.gl/layers";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
-import type { FeatureCollection } from "geojson";
 import { useState } from "react";
 import type { TDeckLayer, TGeoJSON } from "../context/GeoJSONProvider";
+import { loadGeoJSONFromUrl } from "../api/getGeoJSON";
+import { generateGeoJSONLayer } from "../helpers";
 
 const INITIAL_URL =
   "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson" as const;
@@ -29,20 +29,12 @@ function UploadGeoJSON({
 
   const handleLoad = async () => {
     try {
-      const res = await fetch(geoUrl);
-      const data: FeatureCollection = await res.json();
+      const data = await loadGeoJSONFromUrl(geoUrl);
 
-      const geoLayer = new GeoJsonLayer({
-        id: "loaded-geojson",
-        data,
-        pickable: true,
-        stroked: false,
-        filled: true,
-        pointRadiusMinPixels: 2,
-        getFillColor: [200, 0, 80, 180],
-        getPointRadius: 100,
-      });
       updateGeoJSON(data);
+
+      const geoLayer = generateGeoJSONLayer(data);
+
       updateLayers([geoLayer]);
       closeDialog();
     } catch (error) {
