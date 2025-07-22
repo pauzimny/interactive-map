@@ -52,9 +52,9 @@ function UploadGeoJSON({
   };
 
   return (
-    <Dialog open={isDialogOpen} onClose={closeDialog} disableEnforceFocus>
+    <Dialog open={isDialogOpen} onClose={closeDialog}>
       <DialogTitle>Load GeoJSON from URL</DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{ width: 400 }}>
         <TextField
           label="GeoJSON URL"
           fullWidth
