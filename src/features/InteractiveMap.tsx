@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PathLayer } from "@deck.gl/layers";
 import { convertPointsToPolygonFeature, downloadGeoJSON } from "../helpers";
 import type { IGeoJSONContext, TLngLat } from "../context/GeoJSONProvider";
@@ -48,7 +48,7 @@ function InteractiveMap({
     setClickPoints((prev) => [...prev, [lng, lat]]);
   };
 
-  const finishDrawing = () => {
+  const finishDrawing = useCallback(() => {
     if (clickPoints.length < 3) {
       alert("Polygon must have at least 3 points!");
       return;
@@ -74,20 +74,24 @@ function InteractiveMap({
     updateGeoJSON(geoJSONFeature);
 
     setClickPoints([]);
-  };
+  }, [clickPoints, updateGeoJSON]);
 
-  const handleClearDrawing = () => {
+  const handleClearDrawing = useCallback(() => {
     clearLayers();
     setClickPoints([]);
     setPolygons([]);
     updateGeoJSON(undefined);
-  };
+  }, [clearLayers, updateGeoJSON]);
 
-  const handleExportGeoJSON = () => {
+  const handleExportGeoJSON = useCallback(() => {
     if (!geoJSONFeatures.length) return alert("No geoJSON data found!");
     const fileName = `interactive-map-${new Date().toISOString()}.geojson`;
     downloadGeoJSON(geoJSONFeatures, fileName);
-  };
+  }, [geoJSONFeatures]);
+
+  const undoLastPoint = useCallback(() => {
+    setClickPoints((prev) => prev.slice(0, -1));
+  }, []);
 
   useEffect(() => {
     // blue dots
@@ -153,6 +157,7 @@ function InteractiveMap({
           exportGeoJSONClick={handleExportGeoJSON}
           finishDrawingClick={finishDrawing}
           clearDrawing={handleClearDrawing}
+          undoLastPoint={undoLastPoint}
         />
       )}
       <DeckGL
