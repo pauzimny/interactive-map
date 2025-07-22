@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { GeoJSONContext } from "./GeoJSONProvider";
+import { GeoJSONContext } from "../GeoJSONProvider";
 
 export const useGeoJSONContext = () => {
   const context = useContext(GeoJSONContext);

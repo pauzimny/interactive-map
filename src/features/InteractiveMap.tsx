@@ -8,7 +8,8 @@ import type { TMapFeature } from "../App";
 import { PolygonLayer, type PickingInfo } from "deck.gl";
 import { convertPointsToPolygonFeature, downloadGeoJSON } from "../helpers";
 import DrawToolbar from "./DrawToolbar";
-import type { TDeckLayer, TGeoJSON, TLngLat } from "../context/GeoJSONProvider";
+import type { TGeoJSON, TLngLat } from "../context/GeoJSONProvider";
+import type { TDeckLayer } from "../context/MapViewProvider";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 

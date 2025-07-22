@@ -1,11 +1,11 @@
 import Box from "@mui/material/Box";
 import Header from "./components/Header";
 import { useCallback, useState } from "react";
-import UploadGeoJSON from "./features/UploadGeoJSON";
-import { useGeoJSONContext } from "./context/useGeoJSONContext";
 import InteractiveMapContainer from "./containers/InteractiveMapContainer";
+import UploadGeoJSON from "./features/UploadGeoJSON";
 import SearchLocation from "./features/SearchLocation";
 import TableView from "./features/TableView";
+import { useGeoJSONContext, useMapViewContext } from "./context/hooks";
 
 export type TMapFeature =
   | "DRAW_POLYGON"
@@ -15,8 +15,8 @@ export type TMapFeature =
 
 function App() {
   const [activeFeature, setActiveFeature] = useState<TMapFeature>();
-  const { updateLayers, updateGeoJSON, updateMapViewCoords, geoJSON } =
-    useGeoJSONContext();
+  const { updateGeoJSON, geoJSON } = useGeoJSONContext();
+  const { updateLayers, updateMapViewCoords } = useMapViewContext();
 
   const isUpdateDialogOpen = activeFeature === "UPLOAD_GEO_JSON";
   const isSearchLocationDialogOpen = activeFeature === "SEARCH_LOCATION";

@@ -5,9 +5,10 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
-import type { TDeckLayer, TGeoJSON } from "../context/GeoJSONProvider";
+import type { TGeoJSON } from "../context/GeoJSONProvider";
 import { loadGeoJSONFromUrl } from "../api/getGeoJSON";
 import { generateGeoJSONLayer } from "../helpers";
+import type { TDeckLayer } from "../context/MapViewProvider";
 
 const INITIAL_URL =
   "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson" as const;

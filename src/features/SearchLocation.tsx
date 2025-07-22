@@ -4,10 +4,10 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
-import { useGeoJSONContext } from "../context/useGeoJSONContext";
 import { useState } from "react";
 import { generatePinLayer } from "../helpers";
 import { geocodeLocation } from "../api/geocode";
+import { useMapViewContext } from "../context/hooks";
 
 interface SearchLocationProps {
   isDialogOpen: boolean;
@@ -21,7 +21,7 @@ function SearchLocation({
   updateMapView,
 }: SearchLocationProps) {
   const [query, setQuery] = useState<string>("");
-  const { addLayer } = useGeoJSONContext();
+  const { addLayer } = useMapViewContext();
 
   const handleSearch = async () => {
     if (!query) return;

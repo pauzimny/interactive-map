@@ -1,11 +1,14 @@
 import App from "../App";
 import { GeoJSONProvider } from "../context/GeoJSONProvider";
+import { MapViewProvider } from "../context/MapViewProvider";
 
 function AppContainer() {
   return (
-    <GeoJSONProvider>
-      <App />
-    </GeoJSONProvider>
+    <MapViewProvider>
+      <GeoJSONProvider>
+        <App />
+      </GeoJSONProvider>
+    </MapViewProvider>
   );
 }
 
