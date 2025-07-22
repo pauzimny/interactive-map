@@ -1,27 +1,30 @@
 import { createContext, useCallback, useState, type ReactNode } from "react";
-import type { FeatureCollection } from "geojson";
+import type { Feature } from "geojson";
 
-export type TGeoJSON = FeatureCollection;
 export type TLngLat = [number, number];
 
 export interface IGeoJSONContext {
-  geoJSON: TGeoJSON | null;
-  updateGeoJSON: (data: TGeoJSON | null) => void;
+  geoJSONFeatures: Feature[];
+  updateGeoJSON: (feature?: Feature) => void;
 }
 
 const GeoJSONContext = createContext<IGeoJSONContext | undefined>(undefined);
 
 const GeoJSONProvider = ({ children }: { children: ReactNode }) => {
-  const [geoJSON, setGeoJSON] = useState<TGeoJSON | null>(null);
+  const [geoJSONFeatures, setGeoJSONFeatures] = useState<Feature[]>([]);
 
-  const updateGeoJSON = useCallback((newGeoJSON: TGeoJSON | null) => {
-    setGeoJSON(newGeoJSON);
+  const updateGeoJSON = useCallback((newFeature: Feature | undefined) => {
+    if (!newFeature) {
+      setGeoJSONFeatures([]);
+    } else {
+      setGeoJSONFeatures((prev) => [...prev, newFeature]);
+    }
   }, []);
 
   return (
     <GeoJSONContext.Provider
       value={{
-        geoJSON,
+        geoJSONFeatures,
         updateGeoJSON,
       }}
     >

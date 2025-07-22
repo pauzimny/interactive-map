@@ -9,13 +9,13 @@ interface InteractiveMapContainerProps {
 function InteractiveMapContainer({
   activeFeature,
 }: InteractiveMapContainerProps) {
-  const { geoJSON, updateGeoJSON } = useGeoJSONContext();
+  const { geoJSONFeatures, updateGeoJSON } = useGeoJSONContext();
   const { addLayer, layers, clearLayers, mapViewState, updateFullMapView } =
     useMapViewContext();
 
   return (
     <InteractiveMap
-      geoJSON={geoJSON}
+      geoJSONFeatures={geoJSONFeatures}
       updateGeoJSON={updateGeoJSON}
       addLayer={addLayer}
       activeFeature={activeFeature}

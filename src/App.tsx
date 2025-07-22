@@ -15,7 +15,7 @@ export type TMapFeature =
 
 function App() {
   const [activeFeature, setActiveFeature] = useState<TMapFeature>();
-  const { updateGeoJSON, geoJSON } = useGeoJSONContext();
+  const { updateGeoJSON, geoJSONFeatures } = useGeoJSONContext();
   const { updateLayers, updateMapViewCoords } = useMapViewContext();
 
   const isUpdateDialogOpen = activeFeature === "UPLOAD_GEO_JSON";
@@ -64,7 +64,7 @@ function App() {
       />
       <TableView
         isDialogOpen={isTableViewDialogOpen}
-        geoJSON={geoJSON}
+        geoJSONFeatures={geoJSONFeatures}
         closeDialog={handleCloseDialog}
       />
     </Box>

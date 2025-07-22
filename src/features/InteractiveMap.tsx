@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { PathLayer } from "@deck.gl/layers";
 import { convertPointsToPolygonFeature, downloadGeoJSON } from "../helpers";
-import type { TGeoJSON, TLngLat } from "../context/GeoJSONProvider";
+import type { IGeoJSONContext, TLngLat } from "../context/GeoJSONProvider";
 import type { TMapFeature } from "../App";
 import type { TDeckLayer } from "../context/MapViewProvider";
 import StaticMap, {
@@ -17,9 +17,9 @@ import DrawToolbar from "./DrawToolbar";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 interface InteractiveMapsProps {
-  geoJSON: TGeoJSON | null;
+  geoJSONFeatures: IGeoJSONContext["geoJSONFeatures"];
   activeFeature?: TMapFeature;
-  updateGeoJSON: (data: TGeoJSON | null) => void;
+  updateGeoJSON: IGeoJSONContext["updateGeoJSON"];
   addLayer: (layer: TDeckLayer) => void;
   layers: TDeckLayer[];
   clearLayers: () => void;
@@ -29,7 +29,7 @@ interface InteractiveMapsProps {
 
 function InteractiveMap({
   activeFeature,
-  geoJSON,
+  geoJSONFeatures,
   updateGeoJSON,
   addLayer,
   layers,
@@ -80,13 +80,13 @@ function InteractiveMap({
     clearLayers();
     setClickPoints([]);
     setPolygons([]);
-    updateGeoJSON(null);
+    updateGeoJSON(undefined);
   };
 
   const handleExportGeoJSON = () => {
-    if (!geoJSON) return alert("No geoJSON data found!");
-    const fileName = `interactive-map-${new Date().toISOString()}`;
-    downloadGeoJSON(geoJSON, fileName);
+    if (!geoJSONFeatures.length) return alert("No geoJSON data found!");
+    const fileName = `interactive-map-${new Date().toISOString()}.geojson`;
+    downloadGeoJSON(geoJSONFeatures, fileName);
   };
 
   useEffect(() => {

@@ -6,10 +6,12 @@ import type {
   Point,
   Polygon,
 } from "geojson";
-import type { TGeoJSON, TLngLat } from "./context/GeoJSONProvider";
+import type { TLngLat } from "./context/GeoJSONProvider";
 import { GeoJsonLayer } from "deck.gl";
 
-export const convertPointsToPolygonFeature = (points: TLngLat[]): TGeoJSON => {
+export const convertPointsToPolygonFeature = (
+  points: TLngLat[]
+): Feature<Polygon> => {
   if (points.length < 3) {
     throw new Error("Polygon needs at least 3 points");
   }
@@ -19,10 +21,10 @@ export const convertPointsToPolygonFeature = (points: TLngLat[]): TGeoJSON => {
     ring[0][0] !== ring[ring.length - 1][0] ||
     ring[0][1] !== ring[ring.length - 1][1]
   ) {
-    ring.push(ring[0]);
+    ring.push(ring[0]); // zamknięcie pierścienia
   }
 
-  const feature: Feature<Polygon> = {
+  return {
     type: "Feature",
     geometry: {
       type: "Polygon",
@@ -34,20 +36,15 @@ export const convertPointsToPolygonFeature = (points: TLngLat[]): TGeoJSON => {
       pointsCount: ring.length,
     },
   };
-
-  return {
-    type: "FeatureCollection",
-    features: [feature],
-  };
 };
 
 export const downloadGeoJSON = (
-  feature: TGeoJSON,
-  filename = "polygon.geojson"
+  features: Feature[],
+  filename = "polygons.geojson"
 ) => {
   const data = {
     type: "FeatureCollection",
-    features: [feature],
+    features,
   };
 
   const blob = new Blob([JSON.stringify(data, null, 2)], {
