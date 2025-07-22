@@ -1,17 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DeckGL from "@deck.gl/react";
 import StaticMap from "react-map-gl";
-import { PolygonLayer } from "@deck.gl/layers";
-import type { Feature, Polygon } from "geojson";
 import type { TMapFeature } from "../App";
-import type { PickingInfo } from "deck.gl";
+import { PolygonLayer, type PickingInfo } from "deck.gl";
 import { convertPointsToPolygonFeature, downloadGeoJSON } from "../helpers";
 import DrawToolbar from "./DrawToolbar";
+import type { TDeckLayer, TGeoJSON, TLngLat } from "../context/GeoJSONProvider";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
-
-export type TGeoJSON = Feature<Polygon>;
-export type TLngLat = [number, number];
 
 const INITIAL_VIEW_STATE = {
   longitude: 21.999121,
@@ -20,12 +16,23 @@ const INITIAL_VIEW_STATE = {
 };
 
 interface InteractiveMapsProps {
+  geoJSON: TGeoJSON | null;
   activeFeature?: TMapFeature;
+  updateGeoJSON: (data: TGeoJSON | null) => void;
+  addLayer: (layer: TDeckLayer) => void;
+  layers: TDeckLayer[];
+  clearLayers: () => void;
 }
 
-function InteractiveMap({ activeFeature }: InteractiveMapsProps) {
+function InteractiveMap({
+  activeFeature,
+  geoJSON,
+  updateGeoJSON,
+  addLayer,
+  layers,
+  clearLayers,
+}: InteractiveMapsProps) {
   const [points, setPoints] = useState<TLngLat[]>([]);
-  const [geoJSON, setGeoJSON] = useState<TGeoJSON>();
 
   const isDrawingActive = activeFeature === "DRAW_POLYGON";
 
@@ -46,7 +53,7 @@ function InteractiveMap({ activeFeature }: InteractiveMapsProps) {
       return;
     }
 
-    setGeoJSON(convertPointsToPolygonFeature(points));
+    updateGeoJSON(convertPointsToPolygonFeature(points));
   };
 
   const handleExportGeoJSON = () => {
@@ -59,19 +66,22 @@ function InteractiveMap({ activeFeature }: InteractiveMapsProps) {
     downloadGeoJSON(geoJSON, fileName);
   };
 
-  const layers = [];
+  const handleClearDrawing = () => {
+    clearLayers();
+    setPoints([]);
+  };
 
-  if (points.length > 0) {
-    layers.push(
-      new PolygonLayer({
-        id: "polygon-layer",
+  useEffect(() => {
+    if (isDrawingActive && points.length > 0) {
+      const polygonCoords = [...points, points[0]];
+
+      const newLayer = new PolygonLayer({
+        id: `polygon-layer-${Date.now()}`,
         data: [
           {
             geometry: {
               type: "Polygon",
-              coordinates: [
-                [...points, isDrawingActive ? [] : points[0]].filter(Boolean),
-              ],
+              coordinates: [polygonCoords],
             },
           },
         ],
@@ -79,9 +89,11 @@ function InteractiveMap({ activeFeature }: InteractiveMapsProps) {
         getFillColor: [255, 0, 0, 100],
         getLineColor: [0, 0, 0, 255],
         lineWidthMinPixels: 2,
-      })
-    );
-  }
+      });
+
+      addLayer(newLayer);
+    }
+  }, [isDrawingActive, addLayer, points]);
 
   return (
     <>
@@ -90,6 +102,7 @@ function InteractiveMap({ activeFeature }: InteractiveMapsProps) {
           isFinishDrawingButtonDisabled={points.length < 3}
           exportGeoJSONClick={handleExportGeoJSON}
           finishDrawingClick={finishDrawing}
+          clearDrawing={handleClearDrawing}
         />
       )}
       <DeckGL

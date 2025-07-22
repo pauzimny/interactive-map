@@ -5,12 +5,14 @@ interface DrawToolbarProps {
   isFinishDrawingButtonDisabled: boolean;
   finishDrawingClick: () => void;
   exportGeoJSONClick: () => void;
+  clearDrawing: () => void;
 }
 
 function DrawToolbar({
   isFinishDrawingButtonDisabled,
   finishDrawingClick,
   exportGeoJSONClick,
+  clearDrawing,
 }: DrawToolbarProps) {
   return (
     <Paper
@@ -31,6 +33,7 @@ function DrawToolbar({
       </Button>
 
       <Button onClick={exportGeoJSONClick}>Export GeoJSON</Button>
+      <Button onClick={clearDrawing}>Clear drawing</Button>
     </Paper>
   );
 }

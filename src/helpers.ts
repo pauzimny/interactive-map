@@ -1,9 +1,7 @@
 import type { Feature, Polygon } from "geojson";
-import type { TLngLat } from "./features/InteractiveMap";
+import type { TGeoJSON, TLngLat } from "./context/GeoJSONProvider";
 
-export const convertPointsToPolygonFeature = (
-  points: TLngLat[]
-): Feature<Polygon> => {
+export const convertPointsToPolygonFeature = (points: TLngLat[]): TGeoJSON => {
   if (points.length < 3) {
     throw new Error("Polygon needs at least 3 points");
   }
@@ -16,7 +14,7 @@ export const convertPointsToPolygonFeature = (
     ring.push(ring[0]);
   }
 
-  return {
+  const feature: Feature<Polygon> = {
     type: "Feature",
     geometry: {
       type: "Polygon",
@@ -24,10 +22,15 @@ export const convertPointsToPolygonFeature = (
     },
     properties: {},
   };
+
+  return {
+    type: "FeatureCollection",
+    features: [feature],
+  };
 };
 
 export const downloadGeoJSON = (
-  feature: Feature<Polygon>,
+  feature: TGeoJSON,
   filename = "polygon.geojson"
 ) => {
   const data = {
