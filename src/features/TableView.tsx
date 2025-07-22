@@ -5,28 +5,38 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import type { FeatureCollection } from "geojson";
+import type { Feature } from "geojson";
 
 interface TableViewProps {
   isDialogOpen: boolean;
-  geoJSON: FeatureCollection | null;
+  geoJSONFeatures: Feature[];
   closeDialog: () => void;
 }
 
-function TableView({ isDialogOpen, closeDialog, geoJSON }: TableViewProps) {
-  const features = geoJSON?.features || [];
-
-  const columns: GridColDef[] = Object.keys(features[0]?.properties || {}).map(
-    (key) => ({
-      field: key,
-      headerName: key,
-      width: 150,
-    })
+function TableView({
+  isDialogOpen,
+  closeDialog,
+  geoJSONFeatures,
+}: TableViewProps) {
+  const firstFeatureWithProps = geoJSONFeatures.find(
+    (f) => f.properties && Object.keys(f.properties).length > 0
   );
 
-  const rows = features.map((f, index) => ({
+  const columns: GridColDef[] = firstFeatureWithProps
+    ? Object.keys(firstFeatureWithProps.properties!).map((key) => ({
+        field: key,
+        headerName: key,
+        width: 150,
+      }))
+    : [
+        { field: "type", headerName: "Geometry Type", width: 150 },
+        { field: "id", headerName: "ID", width: 100 },
+      ];
+
+  const rows = geoJSONFeatures.map((feature, index) => ({
     id: index,
-    ...f.properties,
+    ...(feature.properties || {}),
+    type: feature.geometry.type,
   }));
 
   return (

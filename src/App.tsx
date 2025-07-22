@@ -8,17 +8,20 @@ import TableView from "./features/TableView";
 import { useGeoJSONContext, useMapViewContext } from "./context/hooks";
 
 export type TMapFeature =
-  | "DRAW_POLYGON"
+  | "DRAW"
   | "UPLOAD_GEO_JSON"
   | "SEARCH_LOCATION"
   | "DISPLAY_TABLE";
 
+export type TDrawingMode = "POLYGON" | "LINE";
+
 function App() {
   const [activeFeature, setActiveFeature] = useState<TMapFeature>();
-  const { updateGeoJSON, geoJSON } = useGeoJSONContext();
+  const [drawingMode, setDrawingMode] = useState<TDrawingMode>("POLYGON");
+  const { updateGeoJSON, geoJSONFeatures } = useGeoJSONContext();
   const { updateLayers, updateMapViewCoords } = useMapViewContext();
 
-  const isUpdateDialogOpen = activeFeature === "UPLOAD_GEO_JSON";
+  const isUploadDialogOpen = activeFeature === "UPLOAD_GEO_JSON";
   const isSearchLocationDialogOpen = activeFeature === "SEARCH_LOCATION";
   const isTableViewDialogOpen = activeFeature === "DISPLAY_TABLE";
 
@@ -50,9 +53,13 @@ function App() {
         onNavItemClick={updateActiveFeature}
         activeNavItem={activeFeature}
       />
-      <InteractiveMapContainer activeFeature={activeFeature} />
+      <InteractiveMapContainer
+        activeFeature={activeFeature}
+        drawingMode={drawingMode}
+        setDrawingMode={setDrawingMode}
+      />
       <UploadGeoJSON
-        isDialogOpen={isUpdateDialogOpen}
+        isDialogOpen={isUploadDialogOpen}
         closeDialog={handleCloseDialog}
         updateLayers={updateLayers}
         updateGeoJSON={updateGeoJSON}
@@ -64,7 +71,7 @@ function App() {
       />
       <TableView
         isDialogOpen={isTableViewDialogOpen}
-        geoJSON={geoJSON}
+        geoJSONFeatures={geoJSONFeatures}
         closeDialog={handleCloseDialog}
       />
     </Box>
