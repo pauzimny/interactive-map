@@ -5,19 +5,22 @@ import UploadGeoJSON from "./features/UploadGeoJSON";
 import { useGeoJSONContext } from "./context/useGeoJSONContext";
 import InteractiveMapContainer from "./containers/InteractiveMapContainer";
 import SearchLocation from "./features/SearchLocation";
+import TableView from "./features/TableView";
 
 export type TMapFeature =
   | "DRAW_POLYGON"
   | "UPLOAD_GEO_JSON"
-  | "SEARCH_LOCATION";
+  | "SEARCH_LOCATION"
+  | "DISPLAY_TABLE";
 
 function App() {
   const [activeFeature, setActiveFeature] = useState<TMapFeature>();
-  const { updateLayers, updateGeoJSON, updateMapViewCoords } =
+  const { updateLayers, updateGeoJSON, updateMapViewCoords, geoJSON } =
     useGeoJSONContext();
 
   const isUpdateDialogOpen = activeFeature === "UPLOAD_GEO_JSON";
   const isSearchLocationDialogOpen = activeFeature === "SEARCH_LOCATION";
+  const isTableViewDialogOpen = activeFeature === "DISPLAY_TABLE";
 
   const updateActiveFeature = useCallback(
     (updatedActiveFeature: TMapFeature) => {
@@ -58,6 +61,11 @@ function App() {
         isDialogOpen={isSearchLocationDialogOpen}
         closeDialog={handleCloseDialog}
         updateMapView={updateMapView}
+      />
+      <TableView
+        isDialogOpen={isTableViewDialogOpen}
+        geoJSON={geoJSON}
+        closeDialog={handleCloseDialog}
       />
     </Box>
   );

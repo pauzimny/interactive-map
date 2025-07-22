@@ -3,6 +3,7 @@ import Draw from "@mui/icons-material/Draw";
 import List from "@mui/material/List";
 import FileUpload from "@mui/icons-material/FileUpload";
 import Search from "@mui/icons-material/Search";
+import TableView from "@mui/icons-material/TableView";
 import type { NavSidebarProps } from "./NavSidebar";
 import type { TMapFeature } from "../App";
 import NavItem from "./NavItem";
@@ -23,6 +24,7 @@ const navEntriesList: TNavEntry[] = [
     label: "Upload GeoJSON",
     icon: <FileUpload />,
   },
+  { id: "DISPLAY_TABLE", label: "Display Table", icon: <TableView /> },
 ];
 
 function NavList({ onNavItemClick, activeNavItem }: NavListProps) {
