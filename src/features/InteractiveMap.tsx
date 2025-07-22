@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import DeckGL from "@deck.gl/react";
-import StaticMap from "react-map-gl";
+import StaticMap, {
+  type ViewState,
+  type ViewStateChangeEvent,
+} from "react-map-gl";
 import type { TMapFeature } from "../App";
 import { PolygonLayer, type PickingInfo } from "deck.gl";
 import { convertPointsToPolygonFeature, downloadGeoJSON } from "../helpers";
@@ -9,12 +12,6 @@ import type { TDeckLayer, TGeoJSON, TLngLat } from "../context/GeoJSONProvider";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
-const INITIAL_VIEW_STATE = {
-  longitude: 21.999121,
-  latitude: 50.041187,
-  zoom: 4,
-};
-
 interface InteractiveMapsProps {
   geoJSON: TGeoJSON | null;
   activeFeature?: TMapFeature;
@@ -22,6 +19,8 @@ interface InteractiveMapsProps {
   addLayer: (layer: TDeckLayer) => void;
   layers: TDeckLayer[];
   clearLayers: () => void;
+  mapViewState: ViewState;
+  updateFullMapView: (newMapViewState: ViewState) => void;
 }
 
 function InteractiveMap({
@@ -31,6 +30,8 @@ function InteractiveMap({
   addLayer,
   layers,
   clearLayers,
+  mapViewState,
+  updateFullMapView,
 }: InteractiveMapsProps) {
   const [points, setPoints] = useState<TLngLat[]>([]);
 
@@ -106,7 +107,10 @@ function InteractiveMap({
         />
       )}
       <DeckGL
-        initialViewState={INITIAL_VIEW_STATE}
+        viewState={mapViewState}
+        onViewStateChange={(e: ViewStateChangeEvent) =>
+          updateFullMapView(e.viewState)
+        }
         controller
         layers={layers}
         onClick={handleAddPolygonPoint}
