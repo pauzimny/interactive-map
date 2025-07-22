@@ -1,18 +1,21 @@
 import { useEffect, useState } from "react";
-import DeckGL from "@deck.gl/react";
+import { PathLayer } from "@deck.gl/layers";
+import { convertPointsToPolygonFeature, downloadGeoJSON } from "../helpers";
+import type { TGeoJSON, TLngLat } from "../context/GeoJSONProvider";
+import type { TMapFeature } from "../App";
+import type { TDeckLayer } from "../context/MapViewProvider";
 import StaticMap, {
   type ViewState,
   type ViewStateChangeEvent,
 } from "react-map-gl";
-import type { TMapFeature } from "../App";
-import { PolygonLayer, type PickingInfo } from "deck.gl";
-import { convertPointsToPolygonFeature, downloadGeoJSON } from "../helpers";
+import DeckGL, {
+  PolygonLayer,
+  ScatterplotLayer,
+  type PickingInfo,
+} from "deck.gl";
 import DrawToolbar from "./DrawToolbar";
-import type { TGeoJSON, TLngLat } from "../context/GeoJSONProvider";
-import type { TDeckLayer } from "../context/MapViewProvider";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
-
 interface InteractiveMapsProps {
   geoJSON: TGeoJSON | null;
   activeFeature?: TMapFeature;
@@ -34,74 +37,119 @@ function InteractiveMap({
   mapViewState,
   updateFullMapView,
 }: InteractiveMapsProps) {
-  const [points, setPoints] = useState<TLngLat[]>([]);
+  const [clickPoints, setClickPoints] = useState<TLngLat[]>([]);
+  const [polygons, setPolygons] = useState<TLngLat[][]>([]);
 
   const isDrawingActive = activeFeature === "DRAW_POLYGON";
 
   const handleAddPolygonPoint = (info: PickingInfo) => {
-    if (!isDrawingActive) return;
-
-    if (!info.coordinate)
-      return alert("Cannot read coordinates! Please try again.");
-    const long = info.coordinate[0];
-    const lat = info.coordinate[1];
-
-    setPoints((prev) => [...prev, [long, lat]]);
+    if (!isDrawingActive || !info.coordinate) return;
+    const [lng, lat] = info.coordinate;
+    setClickPoints((prev) => [...prev, [lng, lat]]);
   };
 
   const finishDrawing = () => {
-    if (points.length < 3) {
+    if (clickPoints.length < 3) {
       alert("Polygon must have at least 3 points!");
       return;
     }
 
-    updateGeoJSON(convertPointsToPolygonFeature(points));
-  };
+    const closedPolygon = [...clickPoints];
+    const [firstLng, firstLat] = clickPoints[0];
+    const [lastLng, lastLat] = clickPoints[clickPoints.length - 1];
 
-  const handleExportGeoJSON = () => {
-    if (!geoJSON) return alert("No geoJSON data found! Please try again.");
+    const isPolygonNotClosed = firstLng !== lastLng || firstLat !== lastLat;
+    if (isPolygonNotClosed) {
+      closedPolygon.push(clickPoints[0]);
+    }
 
-    const fileName = `interactive-map-geojson-${new Date(
-      Date.now()
-    ).toISOString()}`;
+    if (closedPolygon.length < 4) {
+      alert("Polygon must be closed and have at least 3 sides.");
+      return;
+    }
 
-    downloadGeoJSON(geoJSON, fileName);
+    setPolygons((prev) => [...prev, closedPolygon]);
+
+    const geoJSONFeature = convertPointsToPolygonFeature(closedPolygon);
+    updateGeoJSON(geoJSONFeature);
+
+    setClickPoints([]);
   };
 
   const handleClearDrawing = () => {
     clearLayers();
-    setPoints([]);
+    setClickPoints([]);
+    setPolygons([]);
+    updateGeoJSON(null);
+  };
+
+  const handleExportGeoJSON = () => {
+    if (!geoJSON) return alert("No geoJSON data found!");
+    const fileName = `interactive-map-${new Date().toISOString()}`;
+    downloadGeoJSON(geoJSON, fileName);
   };
 
   useEffect(() => {
-    if (isDrawingActive && points.length > 0) {
-      const polygonCoords = [...points, points[0]];
+    // blue dots
+    const clickPointLayer = new ScatterplotLayer({
+      id: "click-points",
+      data: clickPoints,
+      getPosition: (d) => d,
+      getRadius: 10,
+      pickable: false,
+      getFillColor: [0, 0, 255, 255],
+      radiusMinPixels: 5,
+      radiusMaxPixels: 8,
+      radiusUnits: "pixels",
+    });
 
-      const newLayer = new PolygonLayer({
-        id: `polygon-layer-${Date.now()}`,
+    // yellow line
+    const lineLayer =
+      clickPoints.length > 1
+        ? new PathLayer({
+            id: "line-layer",
+            data: [
+              {
+                path: clickPoints,
+              },
+            ],
+            getPath: (d) => d.path,
+            getColor: [255, 255, 0, 255],
+            widthMinPixels: 2,
+            pickable: false,
+          })
+        : null;
+
+    const polygonLayers = polygons.map((coords, i) => {
+      return new PolygonLayer({
+        id: `polygon-${i}`,
         data: [
           {
             geometry: {
               type: "Polygon",
-              coordinates: [polygonCoords],
+              coordinates: [[...coords, coords[0]]],
             },
           },
         ],
-        getPolygon: (d) => d.geometry.coordinates,
         getFillColor: [255, 0, 0, 100],
         getLineColor: [0, 0, 0, 255],
         lineWidthMinPixels: 2,
+        pickable: false,
+        getPolygon: (d) => d.geometry.coordinates,
       });
+    });
 
-      addLayer(newLayer);
-    }
-  }, [isDrawingActive, addLayer, points]);
+    clearLayers();
+    polygonLayers.forEach(addLayer);
+    if (lineLayer) addLayer(lineLayer);
+    addLayer(clickPointLayer);
+  }, [clickPoints, polygons, addLayer, clearLayers]);
 
   return (
     <>
       {isDrawingActive && (
         <DrawToolbar
-          isFinishDrawingButtonDisabled={points.length < 3}
+          isFinishDrawingButtonDisabled={clickPoints.length < 3}
           exportGeoJSONClick={handleExportGeoJSON}
           finishDrawingClick={finishDrawing}
           clearDrawing={handleClearDrawing}
