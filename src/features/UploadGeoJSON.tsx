@@ -5,23 +5,25 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
-import type { Layer } from "deck.gl";
 import type { FeatureCollection } from "geojson";
 import { useState } from "react";
+import type { TDeckLayer, TGeoJSON } from "../context/GeoJSONProvider";
 
 const INITIAL_URL =
-  "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson" as const;
+  "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson" as const;
 
 interface UploadGeoJSONProps {
   isDialogOpen: boolean;
   closeDialog: () => void;
-  updateLayers: (newLayers: Layer[]) => void;
+  updateLayers: (newLayers: TDeckLayer[]) => void;
+  updateGeoJSON: (data: TGeoJSON | null) => void;
 }
 
 function UploadGeoJSON({
   updateLayers,
   isDialogOpen,
   closeDialog,
+  updateGeoJSON,
 }: UploadGeoJSONProps) {
   const [geoUrl, setGeoUrl] = useState<string>(INITIAL_URL);
 
@@ -40,7 +42,7 @@ function UploadGeoJSON({
         getFillColor: [200, 0, 80, 180],
         getPointRadius: 100,
       });
-
+      updateGeoJSON(data);
       updateLayers([geoLayer]);
       closeDialog();
     } catch (error) {

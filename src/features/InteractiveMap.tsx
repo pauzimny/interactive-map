@@ -76,7 +76,7 @@ function InteractiveMap({
       const polygonCoords = [...points, points[0]];
 
       const newLayer = new PolygonLayer({
-        id: `polygon-layer-${Date.now()}`, // Unikalny ID
+        id: `polygon-layer-${Date.now()}`,
         data: [
           {
             geometry: {

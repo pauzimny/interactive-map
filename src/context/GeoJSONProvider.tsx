@@ -1,9 +1,9 @@
 import { createContext, useCallback, useState, type ReactNode } from "react";
-import type { Feature, Polygon } from "geojson";
-import { Layer } from "deck.gl";
+import type { FeatureCollection } from "geojson";
+import { GeoJsonLayer, PolygonLayer } from "deck.gl";
 
-export type TDeckLayer = Layer<any>;
-export type TGeoJSON = Feature<Polygon>;
+export type TDeckLayer = PolygonLayer | GeoJsonLayer;
+export type TGeoJSON = FeatureCollection;
 export type TLngLat = [number, number];
 
 interface IGeoJSONContext {

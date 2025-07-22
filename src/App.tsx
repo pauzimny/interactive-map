@@ -9,7 +9,7 @@ export type TMapFeature = "DRAW_POLYGON" | "UPLOAD_GEO_JSON";
 
 function App() {
   const [activeFeature, setActiveFeature] = useState<TMapFeature>();
-  const { updateLayers } = useGeoJSONContext();
+  const { updateLayers, updateGeoJSON } = useGeoJSONContext();
 
   const isDialogOpen = activeFeature === "UPLOAD_GEO_JSON";
 
@@ -39,6 +39,7 @@ function App() {
         isDialogOpen={isDialogOpen}
         closeDialog={handleCloseDialog}
         updateLayers={updateLayers}
+        updateGeoJSON={updateGeoJSON}
       />
     </Box>
   );
