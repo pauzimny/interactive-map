@@ -3,11 +3,10 @@ import DeckGL from "@deck.gl/react";
 import StaticMap from "react-map-gl";
 import { PolygonLayer } from "@deck.gl/layers";
 import type { Feature, Polygon } from "geojson";
-import Button from "@mui/material/Button";
-import Paper from "@mui/material/Paper";
 import type { TMapFeature } from "../App";
 import type { PickingInfo } from "deck.gl";
 import { convertPointsToPolygonFeature } from "../helpers";
+import DrawToolbar from "./DrawToolbar";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -26,7 +25,7 @@ interface InteractiveMapsProps {
 
 function InteractiveMap({ activeFeature }: InteractiveMapsProps) {
   const [points, setPoints] = useState<TLngLat[]>([]);
-  const [geoJSON, setGeoJSON] = useState<TGeoJSON>();
+  const [_, setGeoJSON] = useState<TGeoJSON>();
 
   const isDrawingActive = activeFeature === "DRAW_POLYGON";
 
@@ -48,6 +47,10 @@ function InteractiveMap({ activeFeature }: InteractiveMapsProps) {
     }
 
     setGeoJSON(convertPointsToPolygonFeature(points));
+  };
+
+  const handleExportGeoJSON = () => {
+    console.log();
   };
 
   const layers = [];
@@ -77,15 +80,11 @@ function InteractiveMap({ activeFeature }: InteractiveMapsProps) {
   return (
     <>
       {isDrawingActive && (
-        <Paper sx={{ position: "absolute", right: 32, zIndex: 1, margin: 2 }}>
-          <Button onClick={finishDrawing} disabled={points.length < 3}>
-            Finish Drawing
-          </Button>
-
-          <Button onClick={() => console.log(JSON.stringify(geoJSON, null, 2))}>
-            Show GeoJSON in Console
-          </Button>
-        </Paper>
+        <DrawToolbar
+          isFinishDrawingButtonDisabled={points.length < 3}
+          exportGeoJSONClick={handleExportGeoJSON}
+          finishDrawingClick={finishDrawing}
+        />
       )}
       <DeckGL
         initialViewState={INITIAL_VIEW_STATE}
