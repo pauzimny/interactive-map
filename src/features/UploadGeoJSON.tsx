@@ -50,7 +50,7 @@ function UploadGeoJSON({
   };
 
   return (
-    <Dialog open={isDialogOpen} onClose={closeDialog}>
+    <Dialog open={isDialogOpen} onClose={closeDialog} disableEnforceFocus>
       <DialogTitle>Load GeoJSON from URL</DialogTitle>
       <DialogContent>
         <TextField
