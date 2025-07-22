@@ -6,9 +6,11 @@ import Paper from "@mui/material/Paper";
 import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import NavSidebar from "./NavSidebar";
+import NavSidebar, { type NavSidebarProps } from "./NavSidebar";
 
-function Header() {
+type HeaderProps = Pick<NavSidebarProps, "onNavItemClick" | "activeNavItem">;
+
+function Header(props: HeaderProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
 
   const toggleDrawer = (newOpen: boolean) => {
@@ -18,7 +20,7 @@ function Header() {
   const onCloseDrawer = useCallback(() => toggleDrawer(false), []);
 
   return (
-    <Paper>
+    <Paper sx={{ position: "relative", zIndex: 10 }}>
       <Box sx={{ flexGrow: 1 }}>
         <AppBar position="static">
           <Toolbar>
@@ -36,7 +38,11 @@ function Header() {
               Interactive Map
             </Typography>
 
-            <NavSidebar onClose={onCloseDrawer} isDrawerOpen={isDrawerOpen} />
+            <NavSidebar
+              onClose={onCloseDrawer}
+              isDrawerOpen={isDrawerOpen}
+              {...props}
+            />
           </Toolbar>
         </AppBar>
       </Box>
