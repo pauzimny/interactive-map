@@ -18,7 +18,7 @@ function App() {
   const { updateGeoJSON, geoJSONFeatures } = useGeoJSONContext();
   const { updateLayers, updateMapViewCoords } = useMapViewContext();
 
-  const isUpdateDialogOpen = activeFeature === "UPLOAD_GEO_JSON";
+  const isUploadDialogOpen = activeFeature === "UPLOAD_GEO_JSON";
   const isSearchLocationDialogOpen = activeFeature === "SEARCH_LOCATION";
   const isTableViewDialogOpen = activeFeature === "DISPLAY_TABLE";
 
@@ -52,7 +52,7 @@ function App() {
       />
       <InteractiveMapContainer activeFeature={activeFeature} />
       <UploadGeoJSON
-        isDialogOpen={isUpdateDialogOpen}
+        isDialogOpen={isUploadDialogOpen}
         closeDialog={handleCloseDialog}
         updateLayers={updateLayers}
         updateGeoJSON={updateGeoJSON}

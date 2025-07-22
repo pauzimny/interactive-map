@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { PathLayer } from "@deck.gl/layers";
-import { convertPointsToPolygonFeature, downloadGeoJSON } from "../helpers";
+import {
+  convertPointsToPolygonFeature,
+  definePolygonData,
+  downloadGeoJSON,
+  generatePolygonLayer,
+  generateTempDrawLines,
+  generateTempDrawPoints,
+} from "../helpers";
 import type { IGeoJSONContext, TLngLat } from "../context/GeoJSONProvider";
 import type { TMapFeature } from "../App";
 import type { TDeckLayer } from "../context/MapViewProvider";
@@ -8,11 +14,7 @@ import StaticMap, {
   type ViewState,
   type ViewStateChangeEvent,
 } from "react-map-gl";
-import DeckGL, {
-  PolygonLayer,
-  ScatterplotLayer,
-  type PickingInfo,
-} from "deck.gl";
+import DeckGL, { type PickingInfo } from "deck.gl";
 import DrawToolbar from "./DrawToolbar";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -48,29 +50,14 @@ function InteractiveMap({
     setClickPoints((prev) => [...prev, [lng, lat]]);
   };
 
-  const finishDrawing = useCallback(() => {
-    if (clickPoints.length < 3) {
-      alert("Polygon must have at least 3 points!");
-      return;
-    }
+  const handleFinishDrawing = useCallback(() => {
+    const drawnPolygon = definePolygonData(clickPoints);
 
-    const closedPolygon = [...clickPoints];
-    const [firstLng, firstLat] = clickPoints[0];
-    const [lastLng, lastLat] = clickPoints[clickPoints.length - 1];
+    if (!drawnPolygon) return;
 
-    const isPolygonNotClosed = firstLng !== lastLng || firstLat !== lastLat;
-    if (isPolygonNotClosed) {
-      closedPolygon.push(clickPoints[0]);
-    }
+    setPolygons((prev) => [...prev, drawnPolygon]);
 
-    if (closedPolygon.length < 4) {
-      alert("Polygon must be closed and have at least 3 sides.");
-      return;
-    }
-
-    setPolygons((prev) => [...prev, closedPolygon]);
-
-    const geoJSONFeature = convertPointsToPolygonFeature(closedPolygon);
+    const geoJSONFeature = convertPointsToPolygonFeature(drawnPolygon);
     updateGeoJSON(geoJSONFeature);
 
     setClickPoints([]);
@@ -85,69 +72,34 @@ function InteractiveMap({
 
   const handleExportGeoJSON = useCallback(() => {
     if (!geoJSONFeatures.length) return alert("No geoJSON data found!");
+
     const fileName = `interactive-map-${new Date().toISOString()}.geojson`;
+
     downloadGeoJSON(geoJSONFeatures, fileName);
   }, [geoJSONFeatures]);
 
-  const undoLastPoint = useCallback(() => {
+  const handleUndoLastPoint = useCallback(() => {
     setClickPoints((prev) => prev.slice(0, -1));
   }, []);
 
-  useEffect(() => {
-    // blue dots
-    const clickPointLayer = new ScatterplotLayer({
-      id: "click-points",
-      data: clickPoints,
-      getPosition: (d) => d,
-      getRadius: 10,
-      pickable: false,
-      getFillColor: [0, 0, 255, 255],
-      radiusMinPixels: 5,
-      radiusMaxPixels: 8,
-      radiusUnits: "pixels",
-    });
+  const runDrawing = useCallback(() => {
+    const clickPointLayer = generateTempDrawPoints(clickPoints);
 
-    // yellow line
-    const lineLayer =
-      clickPoints.length > 1
-        ? new PathLayer({
-            id: "line-layer",
-            data: [
-              {
-                path: clickPoints,
-              },
-            ],
-            getPath: (d) => d.path,
-            getColor: [255, 255, 0, 255],
-            widthMinPixels: 2,
-            pickable: false,
-          })
-        : null;
+    const lineLayer = generateTempDrawLines(clickPoints);
 
-    const polygonLayers = polygons.map((coords, i) => {
-      return new PolygonLayer({
-        id: `polygon-${i}`,
-        data: [
-          {
-            geometry: {
-              type: "Polygon",
-              coordinates: [[...coords, coords[0]]],
-            },
-          },
-        ],
-        getFillColor: [255, 0, 0, 100],
-        getLineColor: [0, 0, 0, 255],
-        lineWidthMinPixels: 2,
-        pickable: false,
-        getPolygon: (d) => d.geometry.coordinates,
-      });
-    });
+    const polygonLayers = generatePolygonLayer(polygons);
 
     clearLayers();
     polygonLayers.forEach(addLayer);
+
     if (lineLayer) addLayer(lineLayer);
+
     addLayer(clickPointLayer);
   }, [clickPoints, polygons, addLayer, clearLayers]);
+
+  useEffect(() => {
+    runDrawing();
+  }, [runDrawing]);
 
   return (
     <>
@@ -155,9 +107,9 @@ function InteractiveMap({
         <DrawToolbar
           isFinishDrawingButtonDisabled={clickPoints.length < 3}
           exportGeoJSONClick={handleExportGeoJSON}
-          finishDrawingClick={finishDrawing}
+          finishDrawingClick={handleFinishDrawing}
           clearDrawing={handleClearDrawing}
-          undoLastPoint={undoLastPoint}
+          undoLastPoint={handleUndoLastPoint}
         />
       )}
       <DeckGL

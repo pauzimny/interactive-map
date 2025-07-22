@@ -7,7 +7,12 @@ import type {
   Polygon,
 } from "geojson";
 import type { TLngLat } from "./context/GeoJSONProvider";
-import { GeoJsonLayer } from "deck.gl";
+import {
+  GeoJsonLayer,
+  PathLayer,
+  PolygonLayer,
+  ScatterplotLayer,
+} from "deck.gl";
 
 export const convertPointsToPolygonFeature = (
   points: TLngLat[]
@@ -113,4 +118,79 @@ export const generateGeoJSONLayer = (
     getFillColor: [200, 0, 80, 180],
     getPointRadius: 100,
   });
+};
+
+export const generateTempDrawPoints = (points: TLngLat[]) => {
+  return new ScatterplotLayer({
+    id: "click-points",
+    data: points,
+    getPosition: (d) => d,
+    getRadius: 10,
+    pickable: false,
+    getFillColor: [0, 0, 255, 255],
+    radiusMinPixels: 5,
+    radiusMaxPixels: 8,
+    radiusUnits: "pixels",
+  });
+};
+
+export const generateTempDrawLines = (points: TLngLat[]) => {
+  return points.length > 1
+    ? new PathLayer({
+        id: "line-layer",
+        data: [
+          {
+            path: points,
+          },
+        ],
+        getPath: (d) => d.path,
+        getColor: [255, 255, 0, 255],
+        widthMinPixels: 2,
+        pickable: false,
+      })
+    : null;
+};
+
+export const generatePolygonLayer = (polygons: TLngLat[][]) => {
+  return polygons.map((coords, i) => {
+    return new PolygonLayer({
+      id: `polygon-${i}`,
+      data: [
+        {
+          geometry: {
+            type: "Polygon",
+            coordinates: [[...coords, coords[0]]],
+          },
+        },
+      ],
+      getFillColor: [255, 0, 0, 100],
+      getLineColor: [0, 0, 0, 255],
+      lineWidthMinPixels: 2,
+      pickable: false,
+      getPolygon: (d) => d.geometry.coordinates,
+    });
+  });
+};
+
+export const definePolygonData = (points: TLngLat[]) => {
+  if (points.length < 3) {
+    alert("Polygon must have at least 3 points!");
+    return;
+  }
+
+  const closedPolygon = [...points];
+  const [firstLng, firstLat] = points[0];
+  const [lastLng, lastLat] = points[points.length - 1];
+
+  const isPolygonNotClosed = firstLng !== lastLng || firstLat !== lastLat;
+  if (isPolygonNotClosed) {
+    closedPolygon.push(points[0]);
+  }
+
+  if (closedPolygon.length < 4) {
+    alert("Polygon must be closed and have at least 3 sides.");
+    return;
+  }
+
+  return closedPolygon;
 };
