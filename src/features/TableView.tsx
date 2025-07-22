@@ -4,19 +4,27 @@ import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  type GridColDef,
+  type GridRowParams,
+} from "@mui/x-data-grid";
 import type { Feature } from "geojson";
+import { generateHighlightLayer } from "../helpers";
+import type { TDeckLayer } from "../context/MapViewProvider";
 
 interface TableViewProps {
   isDialogOpen: boolean;
   geoJSONFeatures: Feature[];
   closeDialog: () => void;
+  addLayer: (layer: TDeckLayer) => void;
 }
 
 function TableView({
   isDialogOpen,
   closeDialog,
   geoJSONFeatures,
+  addLayer,
 }: TableViewProps) {
   const firstFeatureWithProps = geoJSONFeatures.find(
     (f) => f.properties && Object.keys(f.properties).length > 0
@@ -38,6 +46,14 @@ function TableView({
     ...(feature.properties || {}),
     type: feature.geometry.type,
   }));
+
+  const handleRowClick = (params: GridRowParams<any>) => {
+    const index = params.id;
+    const selectedFeature = geoJSONFeatures[index as number];
+    const highlightLayer = generateHighlightLayer(selectedFeature);
+
+    addLayer(highlightLayer);
+  };
 
   return (
     <Dialog
@@ -76,6 +92,16 @@ function TableView({
               columns={columns}
               sx={{ flexGrow: 1 }}
               pageSizeOptions={[10, 50, 100]}
+              // onRowSelectionModelChange={(newSelection) => {
+              //   const selectedId = Array.isArray(newSelection)
+              //     ? newSelection[0]
+              //     : null;
+              //   setSelectedFeatureIndex(
+              //     typeof selectedId === "number" ? selectedId : null
+              //   );
+              // }}
+
+              onRowClick={handleRowClick}
             />
           </div>
         ) : (

@@ -40,6 +40,7 @@ export const convertPointsToPolygonFeature = (
       name: "User drawn",
       createdAt: new Date().toISOString(),
       pointsCount: ring.length,
+      type: "POLYGON",
     },
   };
 };
@@ -61,6 +62,7 @@ export const convertPointsToLineFeature = (
       name: "User drawn line",
       createdAt: new Date().toISOString(),
       pointsCount: points.length,
+      type: "LINE",
     },
   };
 };
@@ -166,7 +168,7 @@ export const generateTempDrawLines = (points: TLngLat[]) => {
           },
         ],
         getPath: (d) => d.path,
-        getColor: [13, 19, 28],
+        getColor: [13, 19, 28, 255],
         widthMinPixels: 2,
         pickable: false,
       })
@@ -215,7 +217,7 @@ export const generateFeatureLayer = (feature: Feature, index: number) => {
       id,
       data: [{ path: geometry.coordinates }],
       getPath: (d) => d.path,
-      getColor: [13, 19, 28],
+      getColor: [13, 19, 28, 255],
       widthMinPixels: 3,
       pickable: true,
     });
@@ -223,3 +225,21 @@ export const generateFeatureLayer = (feature: Feature, index: number) => {
 
   return null;
 };
+
+export const generateHighlightLayer = (
+  feature: Feature,
+  id = `highlight-${feature.id ?? Date.now()}`
+) =>
+  new GeoJsonLayer({
+    id,
+    data: {
+      type: "FeatureCollection",
+      features: [feature],
+    },
+    filled: true,
+    stroked: true,
+    getFillColor: [0, 255, 0, 80],
+    getLineColor: [0, 255, 0, 255],
+    lineWidthMinPixels: 4,
+    pickable: false,
+  });
