@@ -28,7 +28,11 @@ export const convertPointsToPolygonFeature = (points: TLngLat[]): TGeoJSON => {
       type: "Polygon",
       coordinates: [ring],
     },
-    properties: {},
+    properties: {
+      name: "User drawn",
+      createdAt: new Date().toISOString(),
+      pointsCount: ring.length,
+    },
   };
 
   return {
