@@ -4,14 +4,20 @@ import { useCallback, useState } from "react";
 import UploadGeoJSON from "./features/UploadGeoJSON";
 import { useGeoJSONContext } from "./context/useGeoJSONContext";
 import InteractiveMapContainer from "./containers/InteractiveMapContainer";
+import SearchLocation from "./features/SearchLocation";
 
-export type TMapFeature = "DRAW_POLYGON" | "UPLOAD_GEO_JSON";
+export type TMapFeature =
+  | "DRAW_POLYGON"
+  | "UPLOAD_GEO_JSON"
+  | "SEARCH_LOCATION";
 
 function App() {
   const [activeFeature, setActiveFeature] = useState<TMapFeature>();
-  const { updateLayers, updateGeoJSON } = useGeoJSONContext();
+  const { updateLayers, updateGeoJSON, updateMapViewCoords } =
+    useGeoJSONContext();
 
-  const isDialogOpen = activeFeature === "UPLOAD_GEO_JSON";
+  const isUpdateDialogOpen = activeFeature === "UPLOAD_GEO_JSON";
+  const isSearchLocationDialogOpen = activeFeature === "SEARCH_LOCATION";
 
   const updateActiveFeature = useCallback(
     (updatedActiveFeature: TMapFeature) => {
@@ -28,6 +34,13 @@ function App() {
     setActiveFeature(undefined);
   }, []);
 
+  const updateMapView = useCallback(
+    (lng: number, lat: number) => {
+      updateMapViewCoords({ longitude: lng, latitude: lat });
+    },
+    [updateMapViewCoords]
+  );
+
   return (
     <Box width={"100vw"} height={"100vh"} maxWidth={"100vw"}>
       <Header
@@ -36,10 +49,15 @@ function App() {
       />
       <InteractiveMapContainer activeFeature={activeFeature} />
       <UploadGeoJSON
-        isDialogOpen={isDialogOpen}
+        isDialogOpen={isUpdateDialogOpen}
         closeDialog={handleCloseDialog}
         updateLayers={updateLayers}
         updateGeoJSON={updateGeoJSON}
+      />
+      <SearchLocation
+        isDialogOpen={isSearchLocationDialogOpen}
+        closeDialog={handleCloseDialog}
+        updateMapView={updateMapView}
       />
     </Box>
   );

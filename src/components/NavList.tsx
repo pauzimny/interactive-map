@@ -1,15 +1,17 @@
 import type { ReactNode } from "react";
 import Draw from "@mui/icons-material/Draw";
 import List from "@mui/material/List";
+import FileUpload from "@mui/icons-material/FileUpload";
+import Search from "@mui/icons-material/Search";
 import type { NavSidebarProps } from "./NavSidebar";
 import type { TMapFeature } from "../App";
 import NavItem from "./NavItem";
-import FileUpload from "@mui/icons-material/FileUpload";
 
 type NavListProps = Pick<NavSidebarProps, "onNavItemClick" | "activeNavItem">;
 type TNavEntry = { id: TMapFeature; label: string; icon: ReactNode };
 
 const navEntriesList: TNavEntry[] = [
+  { id: "SEARCH_LOCATION", label: "Search location", icon: <Search /> },
   {
     id: "DRAW_POLYGON",
     label: "Draw Polygons",
