@@ -1,5 +1,5 @@
 import type { Feature, Polygon } from "geojson";
-import type { TLngLat } from "./features/InteractiveMap";
+import type { TLngLat } from "./context/GeoJSONProvider";
 
 export const convertPointsToPolygonFeature = (
   points: TLngLat[]
