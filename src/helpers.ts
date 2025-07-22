@@ -25,3 +25,26 @@ export const convertPointsToPolygonFeature = (
     properties: {},
   };
 };
+
+export const downloadGeoJSON = (
+  feature: Feature<Polygon>,
+  filename = "polygon.geojson"
+) => {
+  const data = {
+    type: "FeatureCollection",
+    features: [feature],
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/geo+json",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = filename;
+  a.click();
+
+  URL.revokeObjectURL(url);
+};

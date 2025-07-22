@@ -5,7 +5,7 @@ import { PolygonLayer } from "@deck.gl/layers";
 import type { Feature, Polygon } from "geojson";
 import type { TMapFeature } from "../App";
 import type { PickingInfo } from "deck.gl";
-import { convertPointsToPolygonFeature } from "../helpers";
+import { convertPointsToPolygonFeature, downloadGeoJSON } from "../helpers";
 import DrawToolbar from "./DrawToolbar";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -25,7 +25,7 @@ interface InteractiveMapsProps {
 
 function InteractiveMap({ activeFeature }: InteractiveMapsProps) {
   const [points, setPoints] = useState<TLngLat[]>([]);
-  const [_, setGeoJSON] = useState<TGeoJSON>();
+  const [geoJSON, setGeoJSON] = useState<TGeoJSON>();
 
   const isDrawingActive = activeFeature === "DRAW_POLYGON";
 
@@ -33,7 +33,7 @@ function InteractiveMap({ activeFeature }: InteractiveMapsProps) {
     if (!isDrawingActive) return;
 
     if (!info.coordinate)
-      return alert("Cannot read coordinates! Please try again");
+      return alert("Cannot read coordinates! Please try again.");
     const long = info.coordinate[0];
     const lat = info.coordinate[1];
 
@@ -50,7 +50,13 @@ function InteractiveMap({ activeFeature }: InteractiveMapsProps) {
   };
 
   const handleExportGeoJSON = () => {
-    console.log();
+    if (!geoJSON) return alert("No geoJSON data found! Please try again.");
+
+    const fileName = `interactive-map-geojson-${new Date(
+      Date.now()
+    ).toISOString()}`;
+
+    downloadGeoJSON(geoJSON, fileName);
   };
 
   const layers = [];
