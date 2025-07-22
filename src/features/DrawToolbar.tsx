@@ -1,13 +1,18 @@
-import CheckIcon from "@mui/icons-material/Check";
-import UndoIcon from "@mui/icons-material/Undo";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DownloadIcon from "@mui/icons-material/Download";
+import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
-import Tooltip from "@mui/material/Tooltip";
-import Button from "@mui/material/Button";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import CreateIcon from "@mui/icons-material/Create";
+import TimelineIcon from "@mui/icons-material/Timeline";
+import UndoIcon from "@mui/icons-material/Undo";
+import SaveIcon from "@mui/icons-material/Save";
+import ClearIcon from "@mui/icons-material/Clear";
+import type { TDrawingMode } from "../App";
 
 interface DrawToolbarProps {
+  drawingMode?: TDrawingMode;
+  setDrawingMode: (mode: TDrawingMode) => void;
   isFinishDrawingButtonDisabled: boolean;
   finishDrawingClick: () => void;
   exportGeoJSONClick: () => void;
@@ -16,6 +21,8 @@ interface DrawToolbarProps {
 }
 
 function DrawToolbar({
+  drawingMode,
+  setDrawingMode,
   isFinishDrawingButtonDisabled,
   finishDrawingClick,
   exportGeoJSONClick,
@@ -24,70 +31,57 @@ function DrawToolbar({
 }: DrawToolbarProps) {
   return (
     <Paper
-      elevation={6}
+      elevation={4}
       sx={{
         position: "absolute",
         right: 32,
-        top: 75,
-        zIndex: 10,
-        p: 2,
-        borderRadius: 3,
-        bgcolor: "#fff",
+        zIndex: 1,
+        margin: 2,
+        padding: 2,
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
       }}
     >
-      <Stack spacing={1} direction="column">
-        <Tooltip title="Undo last point">
-          <span>
-            <Button
-              onClick={undoLastPoint}
-              variant="outlined"
-              startIcon={<UndoIcon />}
-              disabled={isFinishDrawingButtonDisabled}
-              fullWidth
-            >
-              Undo
-            </Button>
-          </span>
-        </Tooltip>
+      <ToggleButtonGroup
+        value={drawingMode}
+        exclusive
+        onChange={(_, newMode) => {
+          if (newMode) setDrawingMode(newMode);
+        }}
+        size="small"
+      >
+        <ToggleButton value="POLYGON">
+          <CreateIcon sx={{ mr: 1 }} />
+          Polygon
+        </ToggleButton>
+        <ToggleButton value="LINE">
+          <TimelineIcon sx={{ mr: 1 }} />
+          Line
+        </ToggleButton>
+      </ToggleButtonGroup>
 
-        <Tooltip title="Finish current polygon">
-          <span>
-            <Button
-              onClick={finishDrawingClick}
-              variant="contained"
-              color="primary"
-              startIcon={<CheckIcon />}
-              disabled={isFinishDrawingButtonDisabled}
-              fullWidth
-            >
-              Finish
-            </Button>
-          </span>
-        </Tooltip>
-
-        <Tooltip title="Export all polygons as GeoJSON">
-          <Button
-            onClick={exportGeoJSONClick}
-            variant="outlined"
-            color="success"
-            startIcon={<DownloadIcon />}
-            fullWidth
-          >
-            Export
-          </Button>
-        </Tooltip>
-
-        <Tooltip title="Clear all points & polygons">
-          <Button
-            onClick={clearDrawing}
-            variant="outlined"
-            color="error"
-            startIcon={<DeleteIcon />}
-            fullWidth
-          >
-            Clear
-          </Button>
-        </Tooltip>
+      <Stack direction="column" spacing={1}>
+        <Button
+          onClick={finishDrawingClick}
+          disabled={isFinishDrawingButtonDisabled}
+          variant="contained"
+        >
+          <SaveIcon sx={{ mr: 1 }} />
+          Finish Drawing
+        </Button>
+        <Button onClick={undoLastPoint} variant="outlined">
+          <UndoIcon sx={{ mr: 1 }} />
+          Undo
+        </Button>
+        <Button onClick={exportGeoJSONClick} variant="outlined">
+          <SaveIcon sx={{ mr: 1 }} />
+          Export GeoJSON
+        </Button>
+        <Button onClick={clearDrawing} variant="outlined" color="error">
+          <ClearIcon sx={{ mr: 1 }} />
+          Clear Drawing
+        </Button>
       </Stack>
     </Paper>
   );

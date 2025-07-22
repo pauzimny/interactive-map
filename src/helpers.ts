@@ -3,6 +3,7 @@ import type {
   FeatureCollection,
   GeoJsonProperties,
   Geometry,
+  LineString,
   Point,
   Polygon,
 } from "geojson";
@@ -26,7 +27,7 @@ export const convertPointsToPolygonFeature = (
     ring[0][0] !== ring[ring.length - 1][0] ||
     ring[0][1] !== ring[ring.length - 1][1]
   ) {
-    ring.push(ring[0]); // zamknięcie pierścienia
+    ring.push(ring[0]);
   }
 
   return {
@@ -43,9 +44,30 @@ export const convertPointsToPolygonFeature = (
   };
 };
 
+export const convertPointsToLineFeature = (
+  points: TLngLat[]
+): Feature<LineString> => {
+  if (points.length < 2) {
+    throw new Error("LineString needs at least 2 points");
+  }
+
+  return {
+    type: "Feature",
+    geometry: {
+      type: "LineString",
+      coordinates: points,
+    },
+    properties: {
+      name: "User drawn line",
+      createdAt: new Date().toISOString(),
+      pointsCount: points.length,
+    },
+  };
+};
+
 export const downloadGeoJSON = (
   features: Feature[],
-  filename = "polygons.geojson"
+  filename = "interactive-map.geojson"
 ) => {
   const data = {
     type: "FeatureCollection",
@@ -144,7 +166,7 @@ export const generateTempDrawLines = (points: TLngLat[]) => {
           },
         ],
         getPath: (d) => d.path,
-        getColor: [255, 255, 0, 255],
+        getColor: [13, 19, 28],
         widthMinPixels: 2,
         pickable: false,
       })
@@ -172,25 +194,32 @@ export const generatePolygonLayer = (polygons: TLngLat[][]) => {
   });
 };
 
-export const definePolygonData = (points: TLngLat[]) => {
-  if (points.length < 3) {
-    alert("Polygon must have at least 3 points!");
-    return;
+export const generateFeatureLayer = (feature: Feature, index: number) => {
+  const id = `feature-layer-${index}`;
+  const geometry = feature.geometry;
+
+  if (geometry.type === "Polygon") {
+    return new PolygonLayer({
+      id,
+      data: [feature],
+      getPolygon: (d) => d.geometry.coordinates,
+      getFillColor: [255, 0, 0, 100],
+      getLineColor: [0, 0, 0, 255],
+      lineWidthMinPixels: 2,
+      pickable: true,
+    });
   }
 
-  const closedPolygon = [...points];
-  const [firstLng, firstLat] = points[0];
-  const [lastLng, lastLat] = points[points.length - 1];
-
-  const isPolygonNotClosed = firstLng !== lastLng || firstLat !== lastLat;
-  if (isPolygonNotClosed) {
-    closedPolygon.push(points[0]);
+  if (geometry.type === "LineString") {
+    return new PathLayer({
+      id,
+      data: [{ path: geometry.coordinates }],
+      getPath: (d) => d.path,
+      getColor: [13, 19, 28],
+      widthMinPixels: 3,
+      pickable: true,
+    });
   }
 
-  if (closedPolygon.length < 4) {
-    alert("Polygon must be closed and have at least 3 sides.");
-    return;
-  }
-
-  return closedPolygon;
+  return null;
 };

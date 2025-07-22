@@ -8,13 +8,16 @@ import TableView from "./features/TableView";
 import { useGeoJSONContext, useMapViewContext } from "./context/hooks";
 
 export type TMapFeature =
-  | "DRAW_POLYGON"
+  | "DRAW"
   | "UPLOAD_GEO_JSON"
   | "SEARCH_LOCATION"
   | "DISPLAY_TABLE";
 
+export type TDrawingMode = "POLYGON" | "LINE";
+
 function App() {
   const [activeFeature, setActiveFeature] = useState<TMapFeature>();
+  const [drawingMode, setDrawingMode] = useState<TDrawingMode>("POLYGON");
   const { updateGeoJSON, geoJSONFeatures } = useGeoJSONContext();
   const { updateLayers, updateMapViewCoords } = useMapViewContext();
 
@@ -50,7 +53,11 @@ function App() {
         onNavItemClick={updateActiveFeature}
         activeNavItem={activeFeature}
       />
-      <InteractiveMapContainer activeFeature={activeFeature} />
+      <InteractiveMapContainer
+        activeFeature={activeFeature}
+        drawingMode={drawingMode}
+        setDrawingMode={setDrawingMode}
+      />
       <UploadGeoJSON
         isDialogOpen={isUploadDialogOpen}
         closeDialog={handleCloseDialog}

@@ -14,8 +14,8 @@ type TNavEntry = { id: TMapFeature; label: string; icon: ReactNode };
 const navEntriesList: TNavEntry[] = [
   { id: "SEARCH_LOCATION", label: "Search location", icon: <Search /> },
   {
-    id: "DRAW_POLYGON",
-    label: "Draw Polygons",
+    id: "DRAW",
+    label: "Draw Polygons or Lines",
     icon: <Draw />,
   },
 

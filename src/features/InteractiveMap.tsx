@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  convertPointsToPolygonFeature,
-  definePolygonData,
-  downloadGeoJSON,
-  generatePolygonLayer,
-  generateTempDrawLines,
-  generateTempDrawPoints,
-} from "../helpers";
-import type { IGeoJSONContext, TLngLat } from "../context/GeoJSONProvider";
-import type { TMapFeature } from "../App";
-import type { TDeckLayer } from "../context/MapViewProvider";
 import StaticMap, {
   type ViewState,
   type ViewStateChangeEvent,
 } from "react-map-gl";
 import DeckGL, { type PickingInfo } from "deck.gl";
+import {
+  convertPointsToLineFeature,
+  convertPointsToPolygonFeature,
+  downloadGeoJSON,
+  generateFeatureLayer,
+  generateTempDrawLines,
+  generateTempDrawPoints,
+} from "../helpers";
+import type { IGeoJSONContext, TLngLat } from "../context/GeoJSONProvider";
+import type { TDrawingMode, TMapFeature } from "../App";
+import type { TDeckLayer } from "../context/MapViewProvider";
 import DrawToolbar from "./DrawToolbar";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -27,6 +27,8 @@ interface InteractiveMapsProps {
   clearLayers: () => void;
   mapViewState: ViewState;
   updateFullMapView: (newMapViewState: ViewState) => void;
+  setDrawingMode: (mode: TDrawingMode) => void;
+  drawingMode?: TDrawingMode;
 }
 
 function InteractiveMap({
@@ -38,11 +40,13 @@ function InteractiveMap({
   clearLayers,
   mapViewState,
   updateFullMapView,
+  drawingMode,
+  setDrawingMode,
 }: InteractiveMapsProps) {
   const [clickPoints, setClickPoints] = useState<TLngLat[]>([]);
-  const [polygons, setPolygons] = useState<TLngLat[][]>([]);
+  const [figures, setFigures] = useState<TLngLat[][]>([]);
 
-  const isDrawingActive = activeFeature === "DRAW_POLYGON";
+  const isDrawingActive = activeFeature === "DRAW";
 
   const handleAddPolygonPoint = (info: PickingInfo) => {
     if (!isDrawingActive || !info.coordinate) return;
@@ -51,22 +55,38 @@ function InteractiveMap({
   };
 
   const handleFinishDrawing = useCallback(() => {
-    const drawnPolygon = definePolygonData(clickPoints);
+    if (clickPoints.length < 2) {
+      alert("You need at least two points to finish a shape.");
+      return;
+    }
 
-    if (!drawnPolygon) return;
+    if (drawingMode === "POLYGON") {
+      if (clickPoints.length < 3) {
+        alert("Polygon needs at least 3 points.");
+        return;
+      }
 
-    setPolygons((prev) => [...prev, drawnPolygon]);
-
-    const geoJSONFeature = convertPointsToPolygonFeature(drawnPolygon);
-    updateGeoJSON(geoJSONFeature);
+      const polygon = convertPointsToPolygonFeature(clickPoints);
+      updateGeoJSON(polygon);
+      setFigures((prev) => [
+        ...prev,
+        polygon.geometry.coordinates[0].map(
+          (coord): TLngLat => [coord[0], coord[1]]
+        ),
+      ]);
+    } else if (drawingMode === "LINE") {
+      const line = convertPointsToLineFeature(clickPoints);
+      updateGeoJSON(line);
+      setFigures((prev) => [...prev, clickPoints]); // linia nie zamykana
+    }
 
     setClickPoints([]);
-  }, [clickPoints, updateGeoJSON]);
+  }, [clickPoints, updateGeoJSON, drawingMode]);
 
   const handleClearDrawing = useCallback(() => {
     clearLayers();
     setClickPoints([]);
-    setPolygons([]);
+    setFigures([]);
     updateGeoJSON(undefined);
   }, [clearLayers, updateGeoJSON]);
 
@@ -82,20 +102,40 @@ function InteractiveMap({
     setClickPoints((prev) => prev.slice(0, -1));
   }, []);
 
+  const defineIsFinishButtonDisabled = () => {
+    switch (drawingMode) {
+      case "POLYGON":
+        return clickPoints.length < 3;
+      case "LINE":
+        return clickPoints.length < 2;
+      default:
+        return true;
+    }
+  };
+
   const runDrawing = useCallback(() => {
     const clickPointLayer = generateTempDrawPoints(clickPoints);
-
     const lineLayer = generateTempDrawLines(clickPoints);
 
-    const polygonLayers = generatePolygonLayer(polygons);
+    const featureLayers = figures.map((coords, i) => {
+      const feature =
+        coords.length >= 3
+          ? convertPointsToPolygonFeature(coords)
+          : convertPointsToLineFeature(coords);
+
+      return generateFeatureLayer(feature, i);
+    });
 
     clearLayers();
-    polygonLayers.forEach(addLayer);
+
+    featureLayers.forEach((layer) => {
+      if (!layer) return;
+      addLayer(layer);
+    });
 
     if (lineLayer) addLayer(lineLayer);
-
     addLayer(clickPointLayer);
-  }, [clickPoints, polygons, addLayer, clearLayers]);
+  }, [clickPoints, figures, addLayer, clearLayers]);
 
   useEffect(() => {
     runDrawing();
@@ -105,11 +145,13 @@ function InteractiveMap({
     <>
       {isDrawingActive && (
         <DrawToolbar
-          isFinishDrawingButtonDisabled={clickPoints.length < 3}
+          isFinishDrawingButtonDisabled={defineIsFinishButtonDisabled()}
           exportGeoJSONClick={handleExportGeoJSON}
           finishDrawingClick={handleFinishDrawing}
           clearDrawing={handleClearDrawing}
           undoLastPoint={handleUndoLastPoint}
+          drawingMode={drawingMode}
+          setDrawingMode={setDrawingMode}
         />
       )}
       <DeckGL

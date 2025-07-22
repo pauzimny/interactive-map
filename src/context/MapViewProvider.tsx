@@ -2,6 +2,7 @@ import { createContext, useCallback, useState, type ReactNode } from "react";
 import type { ViewState } from "react-map-gl";
 import {
   GeoJsonLayer,
+  LineLayer,
   PathLayer,
   PolygonLayer,
   ScatterplotLayer,
@@ -11,7 +12,8 @@ export type TDeckLayer =
   | PolygonLayer
   | GeoJsonLayer
   | ScatterplotLayer
-  | PathLayer;
+  | PathLayer
+  | LineLayer;
 
 const INITIAL_VIEW_STATE: ViewState = {
   longitude: 21.999121,

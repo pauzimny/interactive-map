@@ -1,14 +1,14 @@
-import type { TMapFeature } from "../App";
+import type { TDrawingMode, TMapFeature } from "../App";
 import { useGeoJSONContext, useMapViewContext } from "../context/hooks";
 import InteractiveMap from "../features/InteractiveMap";
 
 interface InteractiveMapContainerProps {
   activeFeature?: TMapFeature;
+  drawingMode?: TDrawingMode;
+  setDrawingMode: (mode: TDrawingMode) => void;
 }
 
-function InteractiveMapContainer({
-  activeFeature,
-}: InteractiveMapContainerProps) {
+function InteractiveMapContainer(props: InteractiveMapContainerProps) {
   const { geoJSONFeatures, updateGeoJSON } = useGeoJSONContext();
   const { addLayer, layers, clearLayers, mapViewState, updateFullMapView } =
     useMapViewContext();
@@ -18,11 +18,11 @@ function InteractiveMapContainer({
       geoJSONFeatures={geoJSONFeatures}
       updateGeoJSON={updateGeoJSON}
       addLayer={addLayer}
-      activeFeature={activeFeature}
       layers={layers}
       clearLayers={clearLayers}
       mapViewState={mapViewState}
       updateFullMapView={updateFullMapView}
+      {...props}
     />
   );
 }
