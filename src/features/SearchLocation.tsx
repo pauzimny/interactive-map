@@ -7,8 +7,7 @@ import TextField from "@mui/material/TextField";
 import { useGeoJSONContext } from "../context/useGeoJSONContext";
 import { useState } from "react";
 import { generatePinLayer } from "../helpers";
-
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string;
+import { geocodeLocation } from "../api/geocode";
 
 interface SearchLocationProps {
   isDialogOpen: boolean;
@@ -28,30 +27,18 @@ function SearchLocation({
     if (!query) return;
 
     try {
-      const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-          query
-        )}.json?access_token=${MAPBOX_TOKEN}`
-      );
-      const data = await res.json();
-
-      if (!data.features || data.features.length === 0) {
-        alert("No location found!");
-        return;
-      }
-
-      const [lng, lat] = data.features[0].center;
+      const { lng, lat } = await geocodeLocation(query);
 
       updateMapView(lng, lat);
 
       const pinLayer = generatePinLayer({ lng, lat });
-
       addLayer(pinLayer);
+
       setQuery("");
       closeDialog();
     } catch (err) {
-      alert("Geocoding failed");
       console.error(err);
+      alert("Location not found or geocoding failed.");
     }
   };
 
