@@ -6,8 +6,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { useGeoJSONContext } from "../context/useGeoJSONContext";
 import { useState } from "react";
-import { GeoJsonLayer } from "@deck.gl/layers";
-import type { FeatureCollection, Point } from "geojson";
+import { generatePinLayer } from "../helpers";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string;
 
@@ -45,29 +44,10 @@ function SearchLocation({
 
       updateMapView(lng, lat);
 
-      const pointGeoJSON: FeatureCollection<Point> = {
-        type: "FeatureCollection",
-        features: [
-          {
-            type: "Feature",
-            geometry: {
-              type: "Point",
-              coordinates: [lng, lat],
-            },
-            properties: {},
-          },
-        ],
-      };
-
-      const pinLayer = new GeoJsonLayer({
-        id: `search-result-pin-${Date.now()}`,
-        data: pointGeoJSON,
-        getPointRadius: 10,
-        getFillColor: [0, 0, 255, 200],
-        pointRadiusMinPixels: 5,
-      });
+      const pinLayer = generatePinLayer({ lng, lat });
 
       addLayer(pinLayer);
+      setQuery("");
       closeDialog();
     } catch (err) {
       alert("Geocoding failed");
@@ -75,8 +55,13 @@ function SearchLocation({
     }
   };
 
+  const handleCloseDialog = () => {
+    setQuery("");
+    closeDialog();
+  };
+
   return (
-    <Dialog open={isDialogOpen} onClose={closeDialog} fullWidth>
+    <Dialog open={isDialogOpen} onClose={handleCloseDialog} fullWidth>
       <DialogTitle>Search Location</DialogTitle>
       <DialogContent>
         <TextField
@@ -85,10 +70,11 @@ function SearchLocation({
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          margin="normal"
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={closeDialog}>Cancel</Button>
+        <Button onClick={handleCloseDialog}>Cancel</Button>
         <Button onClick={handleSearch} variant="contained">
           Search
         </Button>

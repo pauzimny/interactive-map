@@ -1,5 +1,6 @@
-import type { Feature, Polygon } from "geojson";
+import type { Feature, FeatureCollection, Point, Polygon } from "geojson";
 import type { TGeoJSON, TLngLat } from "./context/GeoJSONProvider";
+import { GeoJsonLayer } from "deck.gl";
 
 export const convertPointsToPolygonFeature = (points: TLngLat[]): TGeoJSON => {
   if (points.length < 3) {
@@ -50,4 +51,43 @@ export const downloadGeoJSON = (
   a.click();
 
   URL.revokeObjectURL(url);
+};
+
+const definePointGeoJSON = ({
+  lng,
+  lat,
+}: {
+  lng: number;
+  lat: number;
+}): FeatureCollection<Point> => {
+  return {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [lng, lat],
+        },
+        properties: {},
+      },
+    ],
+  };
+};
+
+export const generatePinLayer = ({
+  lng,
+  lat,
+}: {
+  lng: number;
+  lat: number;
+}) => {
+  const pointGeoJSON = definePointGeoJSON({ lng, lat });
+  return new GeoJsonLayer({
+    id: `search-result-pin-${Date.now()}`,
+    data: pointGeoJSON,
+    getPointRadius: 10,
+    getFillColor: [0, 0, 255, 200],
+    pointRadiusMinPixels: 5,
+  });
 };

@@ -61,7 +61,12 @@ const GeoJSONProvider = ({ children }: { children: ReactNode }) => {
 
   const updateMapViewCoords = useCallback(
     ({ longitude, latitude }: { longitude: number; latitude: number }) => {
-      setMapViewState({ ...BASE_VIEW_STATE, longitude, latitude } as ViewState);
+      setMapViewState({
+        ...BASE_VIEW_STATE,
+        longitude,
+        latitude,
+        zoom: 12,
+      } as ViewState);
     },
     []
   );
