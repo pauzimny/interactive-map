@@ -18,7 +18,6 @@ const navEntriesList: TNavEntry[] = [
     label: "Draw Polygons or Lines",
     icon: <Draw />,
   },
-
   {
     id: "UPLOAD_GEO_JSON",
     label: "Upload GeoJSON",
@@ -33,7 +32,7 @@ function NavList({ onNavItemClick, activeNavItem }: NavListProps) {
   };
 
   return (
-    <List>
+    <List sx={{ paddingTop: "40px" }}>
       {navEntriesList.map((entry) => (
         <NavItem
           key={entry.id}

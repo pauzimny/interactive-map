@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import type { TDrawingMode, TMapFeature } from "../App";
 import { useGeoJSONContext, useMapViewContext } from "../context/hooks";
 import InteractiveMap from "../features/InteractiveMap";
+import { generateGeoJSONLayer, generateHighlightLayer } from "../helpers";
 
 interface InteractiveMapContainerProps {
   activeFeature?: TMapFeature;
@@ -10,8 +12,37 @@ interface InteractiveMapContainerProps {
 
 function InteractiveMapContainer(props: InteractiveMapContainerProps) {
   const { geoJSONFeatures, updateGeoJSON } = useGeoJSONContext();
-  const { addLayer, layers, clearLayers, mapViewState, updateFullMapView } =
-    useMapViewContext();
+  const {
+    addLayer,
+    layers,
+    clearLayers,
+    mapViewState,
+    updateFullMapView,
+    updateLayers,
+    selectedLayersIndices,
+  } = useMapViewContext();
+
+  useEffect(() => {
+    if (!geoJSONFeatures.length) return;
+
+    const highlightLayers = geoJSONFeatures
+      .filter((feature) =>
+        selectedLayersIndices.includes(feature.properties?.id)
+      )
+      .map((feature) =>
+        generateHighlightLayer(feature, `highlighted-${feature.properties?.id}`)
+      );
+
+    const geoFeatureCollection = {
+      type: "FeatureCollection" as const,
+      features: geoJSONFeatures,
+    };
+
+    updateLayers([
+      generateGeoJSONLayer(geoFeatureCollection),
+      ...highlightLayers,
+    ]);
+  }, [geoJSONFeatures, selectedLayersIndices, updateLayers]);
 
   return (
     <InteractiveMap

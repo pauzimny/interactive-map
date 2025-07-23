@@ -7,6 +7,7 @@ import type {
   Point,
   Polygon,
 } from "geojson";
+import { v4 as uuidv4 } from "uuid";
 import type { TLngLat } from "./context/GeoJSONProvider";
 import {
   GeoJsonLayer,
@@ -14,6 +15,10 @@ import {
   PolygonLayer,
   ScatterplotLayer,
 } from "deck.gl";
+
+export const defineFeatureId = () => {
+  return uuidv4();
+};
 
 export const convertPointsToPolygonFeature = (
   points: TLngLat[]
@@ -37,9 +42,11 @@ export const convertPointsToPolygonFeature = (
       coordinates: [ring],
     },
     properties: {
+      id: defineFeatureId(),
       name: "User drawn",
       createdAt: new Date().toISOString(),
       pointsCount: ring.length,
+      type: "POLYGON",
     },
   };
 };
@@ -58,9 +65,11 @@ export const convertPointsToLineFeature = (
       coordinates: points,
     },
     properties: {
+      id: defineFeatureId(),
       name: "User drawn line",
       createdAt: new Date().toISOString(),
       pointsCount: points.length,
+      type: "LINE",
     },
   };
 };
@@ -166,7 +175,7 @@ export const generateTempDrawLines = (points: TLngLat[]) => {
           },
         ],
         getPath: (d) => d.path,
-        getColor: [13, 19, 28],
+        getColor: [13, 19, 28, 255],
         widthMinPixels: 2,
         pickable: false,
       })
@@ -215,7 +224,7 @@ export const generateFeatureLayer = (feature: Feature, index: number) => {
       id,
       data: [{ path: geometry.coordinates }],
       getPath: (d) => d.path,
-      getColor: [13, 19, 28],
+      getColor: [13, 19, 28, 255],
       widthMinPixels: 3,
       pickable: true,
     });
@@ -223,3 +232,21 @@ export const generateFeatureLayer = (feature: Feature, index: number) => {
 
   return null;
 };
+
+export const generateHighlightLayer = (
+  feature: Feature,
+  id = `highlight-${feature.id ?? Date.now()}`
+) =>
+  new GeoJsonLayer({
+    id,
+    data: {
+      type: "FeatureCollection",
+      features: [feature],
+    },
+    filled: true,
+    stroked: true,
+    getFillColor: [0, 255, 0, 80],
+    getLineColor: [0, 255, 0, 255],
+    lineWidthMinPixels: 4,
+    pickable: false,
+  });
