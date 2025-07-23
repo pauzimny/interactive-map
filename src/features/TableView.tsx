@@ -8,16 +8,23 @@ import {
   DataGrid,
   type GridColDef,
   type GridRowParams,
+  type GridRowSelectionModel,
 } from "@mui/x-data-grid";
 import type { Feature } from "geojson";
 import { generateHighlightLayer } from "../helpers";
 import type { TDeckLayer } from "../context/MapViewProvider";
+
+const defaultTableColumns = [
+  { field: "type", headerName: "Geometry Type", width: 150 },
+  { field: "id", headerName: "ID", width: 100 },
+];
 
 interface TableViewProps {
   isDialogOpen: boolean;
   geoJSONFeatures: Feature[];
   closeDialog: () => void;
   addLayer: (layer: TDeckLayer) => void;
+  updateSelectedLayerIndices: (indices: number[]) => void;
 }
 
 function TableView({
@@ -25,6 +32,7 @@ function TableView({
   closeDialog,
   geoJSONFeatures,
   addLayer,
+  updateSelectedLayerIndices,
 }: TableViewProps) {
   const firstFeatureWithProps = geoJSONFeatures.find(
     (f) => f.properties && Object.keys(f.properties).length > 0
@@ -36,13 +44,10 @@ function TableView({
         headerName: key,
         width: 150,
       }))
-    : [
-        { field: "type", headerName: "Geometry Type", width: 150 },
-        { field: "id", headerName: "ID", width: 100 },
-      ];
+    : defaultTableColumns;
 
   const rows = geoJSONFeatures.map((feature, index) => ({
-    id: index,
+    id: `${feature.geometry.type}-${index}`,
     ...(feature.properties || {}),
     type: feature.geometry.type,
   }));
@@ -53,6 +58,22 @@ function TableView({
     const highlightLayer = generateHighlightLayer(selectedFeature);
 
     addLayer(highlightLayer);
+  };
+
+  const handleRowSelection = (selectionModel: GridRowSelectionModel) => {
+    const ids =
+      selectionModel &&
+      typeof selectionModel === "object" &&
+      "ids" in selectionModel
+        ? Array.from(selectionModel.ids)
+        : (selectionModel as (string | number)[]);
+
+    const indices = ids.map((id) => {
+      const parts = `${id}`.split("-");
+      return Number(parts[1]);
+    });
+
+    updateSelectedLayerIndices(indices);
   };
 
   return (
@@ -92,15 +113,8 @@ function TableView({
               columns={columns}
               sx={{ flexGrow: 1 }}
               pageSizeOptions={[10, 50, 100]}
-              // onRowSelectionModelChange={(newSelection) => {
-              //   const selectedId = Array.isArray(newSelection)
-              //     ? newSelection[0]
-              //     : null;
-              //   setSelectedFeatureIndex(
-              //     typeof selectedId === "number" ? selectedId : null
-              //   );
-              // }}
-
+              checkboxSelection
+              onRowSelectionModelChange={handleRowSelection}
               onRowClick={handleRowClick}
             />
           </div>

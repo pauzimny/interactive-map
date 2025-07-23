@@ -19,7 +19,12 @@ function App() {
   const [activeFeature, setActiveFeature] = useState<TMapFeature>();
   const [drawingMode, setDrawingMode] = useState<TDrawingMode>("POLYGON");
   const { updateGeoJSON, geoJSONFeatures } = useGeoJSONContext();
-  const { updateLayers, updateMapViewCoords, addLayer } = useMapViewContext();
+  const {
+    updateLayers,
+    updateMapViewCoords,
+    addLayer,
+    updateSelectedLayerIndices,
+  } = useMapViewContext();
 
   const isUploadDialogOpen = activeFeature === "UPLOAD_GEO_JSON";
   const isSearchLocationDialogOpen = activeFeature === "SEARCH_LOCATION";
@@ -74,6 +79,7 @@ function App() {
         geoJSONFeatures={geoJSONFeatures}
         closeDialog={handleCloseDialog}
         addLayer={addLayer}
+        updateSelectedLayerIndices={updateSelectedLayerIndices}
       />
     </Box>
   );
