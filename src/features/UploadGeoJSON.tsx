@@ -5,10 +5,10 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
-import type { TGeoJSON } from "../context/GeoJSONProvider";
 import { loadGeoJSONFromUrl } from "../api/getGeoJSON";
 import { generateGeoJSONLayer } from "../helpers";
 import type { TDeckLayer } from "../context/MapViewProvider";
+import type { Feature } from "geojson";
 
 const INITIAL_URL =
   "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson" as const;
@@ -17,7 +17,7 @@ interface UploadGeoJSONProps {
   isDialogOpen: boolean;
   closeDialog: () => void;
   updateLayers: (newLayers: TDeckLayer[]) => void;
-  updateGeoJSON: (data: TGeoJSON | null) => void;
+  updateGeoJSON: (feature?: Feature[]) => void;
 }
 
 function UploadGeoJSON({
@@ -32,12 +32,15 @@ function UploadGeoJSON({
     try {
       const data = await loadGeoJSONFromUrl(geoUrl);
 
-      updateGeoJSON(data);
+      if ("features" in data && Array.isArray(data.features)) {
+        updateGeoJSON(data.features);
 
-      const geoLayer = generateGeoJSONLayer(data);
-
-      updateLayers([geoLayer]);
-      closeDialog();
+        const geoLayer = generateGeoJSONLayer(data);
+        updateLayers([geoLayer]);
+        closeDialog();
+      } else {
+        alert("Invalid GeoJSON data!");
+      }
     } catch (error) {
       alert("Failed to load GeoJSON!");
       console.error(error);

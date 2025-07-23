@@ -65,7 +65,7 @@ function InteractiveMap({
 
     setLocalFeatures((prev) => [...prev, newFeature]);
 
-    updateGeoJSON(newFeature);
+    updateGeoJSON([newFeature]);
 
     setClickPoints([]);
   }, [clickPoints, drawingMode, updateGeoJSON]);
