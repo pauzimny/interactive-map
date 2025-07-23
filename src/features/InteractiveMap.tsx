@@ -66,8 +66,10 @@ function InteractiveMap({
         : convertPointsToLineFeature(clickPoints);
 
     setDrawnFeatures((prev) => [...prev, newFeature]);
+    updateGeoJSON([newFeature]);
+
     setClickPoints([]);
-  }, [clickPoints, drawingMode]);
+  }, [clickPoints, drawingMode, updateGeoJSON]);
 
   const handleClearDrawing = useCallback(() => {
     setClickPoints([]);
