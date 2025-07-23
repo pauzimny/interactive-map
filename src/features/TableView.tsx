@@ -13,6 +13,7 @@ import {
 import type { Feature } from "geojson";
 import { defineFeatureId, generateHighlightLayer } from "../helpers";
 import type { TDeckLayer } from "../context/MapViewProvider";
+import { useMemo } from "react";
 
 const defaultTableColumns = [
   { field: "type", headerName: "Geometry Type", width: 150 },
@@ -52,11 +53,13 @@ function TableView({
       }))
     : defaultTableColumns;
 
-  const rows = geoJSONFeatures.map((feature) => ({
-    id: feature.properties?.id || defineFeatureId(feature.geometry.type),
-    ...(feature.properties || {}),
-    type: feature.geometry.type,
-  }));
+  const rows = useMemo(() => {
+    return geoJSONFeatures.map((feature) => ({
+      id: feature.properties?.id || defineFeatureId(),
+      ...(feature.properties || {}),
+      type: feature.geometry.type,
+    }));
+  }, [geoJSONFeatures]);
 
   const rowSelectionModel: GridRowSelectionModel = {
     type: "include",
@@ -123,6 +126,7 @@ function TableView({
             <DataGrid
               rows={rows}
               columns={columns}
+              getRowId={(row) => row.id}
               sx={{ flexGrow: 1 }}
               pageSizeOptions={[10, 50, 100]}
               checkboxSelection
