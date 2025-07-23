@@ -45,6 +45,15 @@ function TableView({
     (f) => f.properties && Object.keys(f.properties).length > 0
   );
 
+  const featureMap = useMemo(() => {
+    const map = new Map<string, Feature>();
+    geoJSONFeatures.forEach((feature) => {
+      const id = feature.properties?.id;
+      if (id) map.set(id, feature);
+    });
+    return map;
+  }, [geoJSONFeatures]);
+
   const columns: GridColDef[] = firstFeatureWithProps
     ? Object.keys(firstFeatureWithProps.properties!).map((key) => ({
         field: key,
@@ -67,11 +76,8 @@ function TableView({
   };
 
   const handleRowClick = (params: GridRowParams<TFeatureRow>) => {
-    const featureId = params.id;
-
-    const selectedFeature = geoJSONFeatures.find(
-      (feature) => feature.properties?.id === featureId
-    );
+    const featureId = String(params.id);
+    const selectedFeature = featureMap.get(featureId);
 
     if (!selectedFeature) return;
 

@@ -23,6 +23,7 @@ interface InteractiveMapsProps {
   geoJSONFeatures: IGeoJSONContext["geoJSONFeatures"];
   activeFeature?: TMapFeature;
   updateGeoJSON: IGeoJSONContext["updateGeoJSON"];
+  updateLayers: (layers: TDeckLayer[]) => void;
   addLayer: (layer: TDeckLayer) => void;
   layers: TDeckLayer[];
   clearLayers: () => void;
@@ -33,19 +34,20 @@ interface InteractiveMapsProps {
 }
 
 function InteractiveMap({
-  activeFeature,
   geoJSONFeatures,
+  activeFeature,
   updateGeoJSON,
-  addLayer,
-  layers,
-  clearLayers,
+  updateLayers,
   mapViewState,
   updateFullMapView,
   drawingMode,
   setDrawingMode,
+  layers,
 }: InteractiveMapsProps) {
   const [clickPoints, setClickPoints] = useState<TLngLat[]>([]);
-  const [localFeatures, setLocalFeatures] = useState(geoJSONFeatures);
+  const [drawnFeatures, setDrawnFeatures] = useState<typeof geoJSONFeatures>(
+    []
+  );
 
   const isDrawingActive = activeFeature === "DRAW";
 
@@ -63,26 +65,21 @@ function InteractiveMap({
         ? convertPointsToPolygonFeature(clickPoints)
         : convertPointsToLineFeature(clickPoints);
 
-    setLocalFeatures((prev) => [...prev, newFeature]);
-
-    updateGeoJSON([newFeature]);
-
+    setDrawnFeatures((prev) => [...prev, newFeature]);
     setClickPoints([]);
-  }, [clickPoints, drawingMode, updateGeoJSON]);
+  }, [clickPoints, drawingMode]);
 
   const handleClearDrawing = useCallback(() => {
-    clearLayers();
     setClickPoints([]);
-    setLocalFeatures([]);
-    updateGeoJSON(undefined);
-  }, [clearLayers, updateGeoJSON]);
+    setDrawnFeatures([]);
+  }, []);
 
   const handleExportGeoJSON = useCallback(() => {
-    if (!geoJSONFeatures.length) return alert("No geoJSON data found!");
-
+    const combined = [...geoJSONFeatures, ...drawnFeatures];
+    if (!combined.length) return alert("No geoJSON data found!");
     const fileName = `interactive-map-${new Date().toISOString()}.geojson`;
-    downloadGeoJSON(geoJSONFeatures, fileName);
-  }, [geoJSONFeatures]);
+    downloadGeoJSON(combined, fileName);
+  }, [geoJSONFeatures, drawnFeatures]);
 
   const handleUndoLastPoint = useCallback(() => {
     setClickPoints((prev) => prev.slice(0, -1));
@@ -100,27 +97,22 @@ function InteractiveMap({
   };
 
   const runDrawing = useCallback(() => {
-    clearLayers();
+    const allFeatures = [...geoJSONFeatures, ...drawnFeatures];
 
-    localFeatures.forEach((feature, i) => {
-      const layer = generateFeatureLayer(feature, i);
-      if (layer) addLayer(layer);
-    });
+    const featureLayers = allFeatures
+      .map((feature, i) => generateFeatureLayer(feature, i))
+      .filter(Boolean);
 
-    const tempLineLayer = generateTempDrawLines(clickPoints);
-    const tempPointsLayer = generateTempDrawPoints(clickPoints);
+    const tempLine = generateTempDrawLines(clickPoints);
+    const tempPoints = generateTempDrawPoints(clickPoints);
+    const tempLayers = [tempLine, tempPoints].filter(Boolean);
 
-    if (tempLineLayer) addLayer(tempLineLayer);
-    if (tempPointsLayer) addLayer(tempPointsLayer);
-  }, [localFeatures, clickPoints, addLayer, clearLayers]);
+    updateLayers([...featureLayers, ...tempLayers] as TDeckLayer[]);
+  }, [geoJSONFeatures, drawnFeatures, clickPoints, updateLayers]);
 
   useEffect(() => {
     runDrawing();
   }, [runDrawing]);
-
-  useEffect(() => {
-    setLocalFeatures(geoJSONFeatures);
-  }, [geoJSONFeatures]);
 
   return (
     <>

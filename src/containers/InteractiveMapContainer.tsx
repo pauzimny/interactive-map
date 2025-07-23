@@ -53,6 +53,7 @@ function InteractiveMapContainer(props: InteractiveMapContainerProps) {
       clearLayers={clearLayers}
       mapViewState={mapViewState}
       updateFullMapView={updateFullMapView}
+      updateLayers={updateLayers}
       {...props}
     />
   );
