@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import type { TDrawingMode, TMapFeature } from "../App";
 import { useGeoJSONContext, useMapViewContext } from "../context/hooks";
 import InteractiveMap from "../features/InteractiveMap";
@@ -11,7 +11,7 @@ interface InteractiveMapContainerProps {
 }
 
 function InteractiveMapContainer(props: InteractiveMapContainerProps) {
-  const { geoJSONFeatures, updateGeoJSON } = useGeoJSONContext();
+  const { state, dispatch } = useGeoJSONContext();
   const {
     addLayer,
     layers,
@@ -22,38 +22,43 @@ function InteractiveMapContainer(props: InteractiveMapContainerProps) {
     selectedLayersIndices,
   } = useMapViewContext();
 
-  useEffect(() => {
-    if (!geoJSONFeatures.length) return;
+  const geoJSONFeatures = useMemo(() => {
+    return [...state.importedFeatures, ...state.drawnFeatures];
+  }, [state.drawnFeatures, state.importedFeatures]);
 
-    const highlightLayers = geoJSONFeatures
-      .filter((feature) =>
-        selectedLayersIndices.includes(feature.properties?.id)
-      )
-      .map((feature) =>
-        generateHighlightLayer(feature, `highlighted-${feature.properties?.id}`)
-      );
+  // useEffect(() => {
+  //   if (!geoJSONFeatures.length) return;
 
-    const geoFeatureCollection = {
-      type: "FeatureCollection" as const,
-      features: geoJSONFeatures,
-    };
+  //   const highlightLayers = geoJSONFeatures
+  //     .filter((feature) =>
+  //       selectedLayersIndices.includes(feature.properties?.id)
+  //     )
+  //     .map((feature) =>
+  //       generateHighlightLayer(feature, `highlighted-${feature.properties?.id}`)
+  //     );
 
-    updateLayers([
-      generateGeoJSONLayer(geoFeatureCollection),
-      ...highlightLayers,
-    ]);
-  }, [geoJSONFeatures, selectedLayersIndices, updateLayers]);
+  //   const geoFeatureCollection = {
+  //     type: "FeatureCollection" as const,
+  //     features: geoJSONFeatures,
+  //   };
+
+  //   updateLayers([
+  //     generateGeoJSONLayer(geoFeatureCollection),
+  //     ...highlightLayers,
+  //   ]);
+  // }, [geoJSONFeatures, selectedLayersIndices, updateLayers]);
 
   return (
     <InteractiveMap
       geoJSONFeatures={geoJSONFeatures}
-      updateGeoJSON={updateGeoJSON}
+      dispatch={dispatch}
+      // updateGeoJSON={updateGeoJSON}
       addLayer={addLayer}
       layers={layers}
       clearLayers={clearLayers}
       mapViewState={mapViewState}
       updateFullMapView={updateFullMapView}
-      updateLayers={updateLayers}
+      // updateLayers={updateLayers}
       {...props}
     />
   );

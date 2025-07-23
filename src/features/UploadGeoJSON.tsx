@@ -6,9 +6,14 @@ import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
 import { loadGeoJSONFromUrl } from "../api/getGeoJSON";
-import { generateGeoJSONLayer } from "../helpers";
+import {
+  generateFeatureLayer,
+  generateGeoJSONLayer,
+  generateGroupedLayers,
+} from "../helpers";
 import type { TDeckLayer } from "../context/MapViewProvider";
 import type { Feature } from "geojson";
+import type { IGeoJSONContext } from "../context/GeoJSONProvider";
 
 const INITIAL_URL =
   "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson" as const;
@@ -18,6 +23,7 @@ interface UploadGeoJSONProps {
   closeDialog: () => void;
   updateLayers: (newLayers: TDeckLayer[]) => void;
   updateGeoJSON: (feature?: Feature[]) => void;
+  dispatch: IGeoJSONContext["dispatch"];
 }
 
 function UploadGeoJSON({
@@ -25,6 +31,7 @@ function UploadGeoJSON({
   isDialogOpen,
   closeDialog,
   updateGeoJSON,
+  dispatch,
 }: UploadGeoJSONProps) {
   const [geoUrl, setGeoUrl] = useState<string>(INITIAL_URL);
 
@@ -32,11 +39,19 @@ function UploadGeoJSON({
     try {
       const data = await loadGeoJSONFromUrl(geoUrl);
 
-      if ("features" in data && Array.isArray(data.features)) {
-        updateGeoJSON(data.features);
+      console.log("data", data);
 
-        const geoLayer = generateGeoJSONLayer(data);
-        updateLayers([geoLayer]);
+      if ("features" in data && Array.isArray(data.features)) {
+        console.log("here");
+        dispatch({ type: "IMPORT_GEOJSON", payload: data.features });
+        const generatedLayers = generateGroupedLayers(data.features);
+
+        console.log("generated Layers", generatedLayers);
+
+        // updateGeoJSON(data.features);
+
+        // const geoLayer = generateGeoJSONLayer(data);
+        updateLayers(generatedLayers);
         closeDialog();
       } else {
         alert("Invalid GeoJSON data!");

@@ -15,6 +15,7 @@ import {
   PolygonLayer,
   ScatterplotLayer,
 } from "deck.gl";
+import type { TDeckLayer } from "./context/MapViewProvider";
 
 export const defineFeatureId = () => {
   return uuidv4();
@@ -142,7 +143,7 @@ export const generateGeoJSONLayer = (
   return new GeoJsonLayer({
     id: "loaded-geojson",
     data,
-    pickable: true,
+    pickable: false,
     stroked: false,
     filled: true,
     pointRadiusMinPixels: 2,
@@ -203,8 +204,65 @@ export const generatePolygonLayer = (polygons: TLngLat[][]) => {
   });
 };
 
-export const generateFeatureLayer = (feature: Feature, index: number) => {
-  const id = `feature-layer-${index}`;
+export const generateGroupedLayers = (features: Feature[]) => {
+  const pointFeatures = features.filter((f) => f.geometry?.type === "Point");
+  const lineFeatures = features.filter(
+    (f) => f.geometry?.type === "LineString"
+  );
+  const polygonFeatures = features.filter(
+    (f) => f.geometry?.type === "Polygon"
+  );
+  const layers: TDeckLayer[] = [];
+
+  const id = defineFeatureId();
+  // const geometry = feature.geometry;
+
+  if (pointFeatures.length) {
+    layers.push(
+      new ScatterplotLayer({
+        id,
+        data: pointFeatures,
+        getPosition: (d) => d.geometry.coordinates,
+        getFillColor: [0, 128, 255],
+        radiusMinPixels: 5,
+        pickable: false,
+      })
+    );
+  }
+
+  if (lineFeatures.length) {
+    layers.push(
+      new PathLayer({
+        id,
+        data: lineFeatures,
+        getPath: (d) => d.geometry.coordinates,
+        getColor: [255, 140, 0],
+        widthMinPixels: 2,
+        pickable: false,
+      })
+    );
+  }
+  if (polygonFeatures.length) {
+    layers.push(
+      new PolygonLayer({
+        id,
+        data: polygonFeatures,
+        getPolygon: (d) => d.geometry.coordinates,
+        getFillColor: [255, 0, 0, 100],
+        getLineColor: [0, 0, 0],
+        lineWidthMinPixels: 1,
+        pickable: false,
+      })
+    );
+  }
+
+  return [];
+};
+
+export const generateFeatureLayer = (feature: Feature) => {
+  const id = defineFeatureId();
+
+  console.log("feature", feature);
   const geometry = feature.geometry;
 
   if (geometry.type === "Polygon") {
@@ -215,7 +273,7 @@ export const generateFeatureLayer = (feature: Feature, index: number) => {
       getFillColor: [255, 0, 0, 100],
       getLineColor: [0, 0, 0, 255],
       lineWidthMinPixels: 2,
-      pickable: true,
+      pickable: false,
     });
   }
 
@@ -226,7 +284,18 @@ export const generateFeatureLayer = (feature: Feature, index: number) => {
       getPath: (d) => d.path,
       getColor: [13, 19, 28, 255],
       widthMinPixels: 3,
-      pickable: true,
+      pickable: false,
+    });
+  }
+
+  if (geometry.type === "Point") {
+    return new ScatterplotLayer({
+      id,
+      data: [feature],
+      getPosition: (d) => d.geometry.coordinates,
+      getFillColor: [0, 128, 255],
+      radiusMinPixels: 6,
+      pickable: false,
     });
   }
 

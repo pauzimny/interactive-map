@@ -18,7 +18,7 @@ export type TDrawingMode = "POLYGON" | "LINE";
 function App() {
   const [activeFeature, setActiveFeature] = useState<TMapFeature>();
   const [drawingMode, setDrawingMode] = useState<TDrawingMode>("POLYGON");
-  const { updateGeoJSON, geoJSONFeatures } = useGeoJSONContext();
+  const { state, dispatch } = useGeoJSONContext();
   const {
     updateLayers,
     updateMapViewCoords,
@@ -68,21 +68,22 @@ function App() {
         isDialogOpen={isUploadDialogOpen}
         closeDialog={handleCloseDialog}
         updateLayers={updateLayers}
-        updateGeoJSON={updateGeoJSON}
+        dispatch={dispatch}
+        // updateGeoJSON={updateGeoJSON}
       />
       <SearchLocation
         isDialogOpen={isSearchLocationDialogOpen}
         closeDialog={handleCloseDialog}
         updateMapView={updateMapView}
       />
-      <TableView
+      {/* <TableView
         isDialogOpen={isTableViewDialogOpen}
         geoJSONFeatures={geoJSONFeatures}
         closeDialog={handleCloseDialog}
         addLayer={addLayer}
         updateSelectedLayerIndices={updateSelectedLayerIndices}
         selectedLayersIndices={selectedLayersIndices}
-      />
+      /> */}
     </Box>
   );
 }

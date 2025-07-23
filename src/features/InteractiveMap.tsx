@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import StaticMap, {
   type ViewState,
   type ViewStateChangeEvent,
@@ -12,7 +12,11 @@ import {
   generateTempDrawLines,
   generateTempDrawPoints,
 } from "../helpers";
-import type { IGeoJSONContext, TLngLat } from "../context/GeoJSONProvider";
+import type {
+  FeatureData,
+  IGeoJSONContext,
+  TLngLat,
+} from "../context/GeoJSONProvider";
 import type { TDrawingMode, TMapFeature } from "../App";
 import type { TDeckLayer } from "../context/MapViewProvider";
 import DrawToolbar from "./DrawToolbar";
@@ -20,10 +24,12 @@ import DrawToolbar from "./DrawToolbar";
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 interface InteractiveMapsProps {
-  geoJSONFeatures: IGeoJSONContext["geoJSONFeatures"];
+  geoJSONFeatures: FeatureData[];
+  // geoJSONFeatures: IGeoJSONContext["geoJSONFeatures"];
   activeFeature?: TMapFeature;
-  updateGeoJSON: IGeoJSONContext["updateGeoJSON"];
-  updateLayers: (layers: TDeckLayer[]) => void;
+  // updateGeoJSON: IGeoJSONContext["updateGeoJSON"];
+  dispatch: IGeoJSONContext["dispatch"];
+  // updateLayers: (layers: TDeckLayer[]) => void;
   addLayer: (layer: TDeckLayer) => void;
   layers: TDeckLayer[];
   clearLayers: () => void;
@@ -36,18 +42,21 @@ interface InteractiveMapsProps {
 function InteractiveMap({
   geoJSONFeatures,
   activeFeature,
-  updateGeoJSON,
-  updateLayers,
+  // updateGeoJSON,
+  // updateLayers,
   mapViewState,
   updateFullMapView,
   drawingMode,
   setDrawingMode,
   layers,
+  dispatch,
 }: InteractiveMapsProps) {
   const [clickPoints, setClickPoints] = useState<TLngLat[]>([]);
-  const [drawnFeatures, setDrawnFeatures] = useState<typeof geoJSONFeatures>(
-    []
-  );
+  // const [drawnFeatures, setDrawnFeatures] = useState<typeof geoJSONFeatures>(
+  //   []
+  // );
+
+  console.log("layers,", layers);
 
   const isDrawingActive = activeFeature === "DRAW";
 
@@ -65,21 +74,23 @@ function InteractiveMap({
         ? convertPointsToPolygonFeature(clickPoints)
         : convertPointsToLineFeature(clickPoints);
 
-    setDrawnFeatures((prev) => [...prev, newFeature]);
+    dispatch({ type: "ADD_DRAWN_FEATURE", payload: newFeature });
+    // setDrawnFeatures((prev) => [...prev, newFeature]);
     setClickPoints([]);
-  }, [clickPoints, drawingMode]);
+  }, [clickPoints, drawingMode, dispatch]);
 
   const handleClearDrawing = useCallback(() => {
     setClickPoints([]);
-    setDrawnFeatures([]);
-  }, []);
+    dispatch({ type: "CLEAR_DRAWN" });
+    // setDrawnFeatures([]);
+  }, [dispatch]);
 
   const handleExportGeoJSON = useCallback(() => {
-    const combined = [...geoJSONFeatures, ...drawnFeatures];
+    const combined = geoJSONFeatures.map((f) => f.feature);
     if (!combined.length) return alert("No geoJSON data found!");
     const fileName = `interactive-map-${new Date().toISOString()}.geojson`;
     downloadGeoJSON(combined, fileName);
-  }, [geoJSONFeatures, drawnFeatures]);
+  }, [geoJSONFeatures]);
 
   const handleUndoLastPoint = useCallback(() => {
     setClickPoints((prev) => prev.slice(0, -1));
@@ -96,23 +107,33 @@ function InteractiveMap({
     }
   };
 
-  const runDrawing = useCallback(() => {
-    const allFeatures = [...geoJSONFeatures, ...drawnFeatures];
+  // const runDrawing = useCallback(() => {
+  //   const featureLayers = geoJSONFeatures
+  //     .map((geoItem, i) => generateFeatureLayer(geoItem.feature, i))
+  //     .filter(Boolean);
 
-    const featureLayers = allFeatures
-      .map((feature, i) => generateFeatureLayer(feature, i))
+  //   const tempLine = generateTempDrawLines(clickPoints);
+  //   const tempPoints = generateTempDrawPoints(clickPoints);
+  //   const tempLayers = [tempLine, tempPoints].filter(Boolean);
+
+  //   updateLayers([...featureLayers, ...tempLayers] as TDeckLayer[]);
+  // }, [clickPoints, geoJSONFeatures, updateLayers]);
+
+  // useEffect(() => {
+  //   runDrawing();
+  // }, [runDrawing]);
+
+  const renderedLayers = useMemo(() => {
+    const featureLayers = geoJSONFeatures
+      .map((feature) => generateFeatureLayer(feature.feature))
       .filter(Boolean);
 
     const tempLine = generateTempDrawLines(clickPoints);
     const tempPoints = generateTempDrawPoints(clickPoints);
     const tempLayers = [tempLine, tempPoints].filter(Boolean);
 
-    updateLayers([...featureLayers, ...tempLayers] as TDeckLayer[]);
-  }, [geoJSONFeatures, drawnFeatures, clickPoints, updateLayers]);
-
-  useEffect(() => {
-    runDrawing();
-  }, [runDrawing]);
+    return [...featureLayers, ...tempLayers] as TDeckLayer[];
+  }, [clickPoints, geoJSONFeatures]);
 
   return (
     <>
@@ -133,7 +154,7 @@ function InteractiveMap({
           updateFullMapView(e.viewState)
         }
         controller
-        layers={layers}
+        layers={renderedLayers}
         onClick={handleAddPolygonPoint}
       >
         <StaticMap
