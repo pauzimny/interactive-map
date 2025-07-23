@@ -25,10 +25,13 @@ function InteractiveMapContainer(props: InteractiveMapContainerProps) {
   useEffect(() => {
     if (!geoJSONFeatures.length) return;
 
-    const highlightLayers = selectedLayersIndices.map((index) => {
-      const feature = geoJSONFeatures[index];
-      return generateHighlightLayer(feature, `highlighted-${index}`);
-    });
+    const highlightLayers = geoJSONFeatures
+      .filter((feature) =>
+        selectedLayersIndices.includes(feature.properties?.id)
+      )
+      .map((feature) =>
+        generateHighlightLayer(feature, `highlighted-${feature.properties?.id}`)
+      );
 
     const geoFeatureCollection = {
       type: "FeatureCollection" as const,

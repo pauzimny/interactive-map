@@ -11,7 +11,7 @@ import {
   type GridRowSelectionModel,
 } from "@mui/x-data-grid";
 import type { Feature } from "geojson";
-import { generateHighlightLayer } from "../helpers";
+import { defineFeatureId, generateHighlightLayer } from "../helpers";
 import type { TDeckLayer } from "../context/MapViewProvider";
 
 const defaultTableColumns = [
@@ -19,12 +19,17 @@ const defaultTableColumns = [
   { field: "id", headerName: "ID", width: 100 },
 ];
 
+type TFeatureRow = {
+  id: string;
+  [key: string]: any;
+};
 interface TableViewProps {
   isDialogOpen: boolean;
   geoJSONFeatures: Feature[];
+  selectedLayersIndices: string[];
   closeDialog: () => void;
   addLayer: (layer: TDeckLayer) => void;
-  updateSelectedLayerIndices: (indices: number[]) => void;
+  updateSelectedLayerIndices: (indices: string[]) => void;
 }
 
 function TableView({
@@ -33,6 +38,7 @@ function TableView({
   geoJSONFeatures,
   addLayer,
   updateSelectedLayerIndices,
+  selectedLayersIndices,
 }: TableViewProps) {
   const firstFeatureWithProps = geoJSONFeatures.find(
     (f) => f.properties && Object.keys(f.properties).length > 0
@@ -46,17 +52,27 @@ function TableView({
       }))
     : defaultTableColumns;
 
-  const rows = geoJSONFeatures.map((feature, index) => ({
-    id: `${feature.geometry.type}-${index}`,
+  const rows = geoJSONFeatures.map((feature) => ({
+    id: feature.properties?.id || defineFeatureId(feature.geometry.type),
     ...(feature.properties || {}),
     type: feature.geometry.type,
   }));
 
-  const handleRowClick = (params: GridRowParams<any>) => {
-    const index = params.id;
-    const selectedFeature = geoJSONFeatures[index as number];
-    const highlightLayer = generateHighlightLayer(selectedFeature);
+  const rowSelectionModel: GridRowSelectionModel = {
+    type: "include",
+    ids: new Set(selectedLayersIndices),
+  };
 
+  const handleRowClick = (params: GridRowParams<TFeatureRow>) => {
+    const featureId = params.id;
+
+    const selectedFeature = geoJSONFeatures.find(
+      (feature) => feature.properties?.id === featureId
+    );
+
+    if (!selectedFeature) return;
+
+    const highlightLayer = generateHighlightLayer(selectedFeature);
     addLayer(highlightLayer);
   };
 
@@ -68,12 +84,8 @@ function TableView({
         ? Array.from(selectionModel.ids)
         : (selectionModel as (string | number)[]);
 
-    const indices = ids.map((id) => {
-      const parts = `${id}`.split("-");
-      return Number(parts[1]);
-    });
-
-    updateSelectedLayerIndices(indices);
+    const idStrings = ids.map(String);
+    updateSelectedLayerIndices(idStrings);
   };
 
   return (
@@ -116,6 +128,7 @@ function TableView({
               checkboxSelection
               onRowSelectionModelChange={handleRowSelection}
               onRowClick={handleRowClick}
+              rowSelectionModel={rowSelectionModel}
             />
           </div>
         ) : (

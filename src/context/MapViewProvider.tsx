@@ -41,8 +41,8 @@ interface IMapViewContext {
   clearLayers: () => void;
   updateMapViewCoords: (data: { longitude: number; latitude: number }) => void;
   updateFullMapView: (newMapViewState: ViewState) => void;
-  updateSelectedLayerIndices: (indices: number[]) => void;
-  selectedLayersIndices: number[];
+  updateSelectedLayerIndices: (indices: string[]) => void;
+  selectedLayersIndices: string[];
 }
 
 const MapViewProvider = ({ children }: { children: ReactNode }) => {
@@ -50,7 +50,7 @@ const MapViewProvider = ({ children }: { children: ReactNode }) => {
   const [mapViewState, setMapViewState] =
     useState<ViewState>(INITIAL_VIEW_STATE);
 
-  const [selectedLayersIndices, setSelectedLayersIndices] = useState<number[]>(
+  const [selectedLayersIndices, setSelectedLayersIndices] = useState<string[]>(
     []
   );
 
@@ -82,7 +82,7 @@ const MapViewProvider = ({ children }: { children: ReactNode }) => {
     setMapViewState(newMapViewState);
   }, []);
 
-  const updateSelectedLayerIndices = useCallback((indices: number[]) => {
+  const updateSelectedLayerIndices = useCallback((indices: string[]) => {
     setSelectedLayersIndices(indices);
   }, []);
 

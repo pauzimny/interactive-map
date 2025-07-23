@@ -24,6 +24,7 @@ function App() {
     updateMapViewCoords,
     addLayer,
     updateSelectedLayerIndices,
+    selectedLayersIndices,
   } = useMapViewContext();
 
   const isUploadDialogOpen = activeFeature === "UPLOAD_GEO_JSON";
@@ -80,6 +81,7 @@ function App() {
         closeDialog={handleCloseDialog}
         addLayer={addLayer}
         updateSelectedLayerIndices={updateSelectedLayerIndices}
+        selectedLayersIndices={selectedLayersIndices}
       />
     </Box>
   );

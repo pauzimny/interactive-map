@@ -15,6 +15,10 @@ import {
   ScatterplotLayer,
 } from "deck.gl";
 
+export const defineFeatureId = (geometryType: string) => {
+  return `${geometryType}-${Date.now()}`;
+};
+
 export const convertPointsToPolygonFeature = (
   points: TLngLat[]
 ): Feature<Polygon> => {
@@ -37,6 +41,7 @@ export const convertPointsToPolygonFeature = (
       coordinates: [ring],
     },
     properties: {
+      id: defineFeatureId("Polygon"),
       name: "User drawn",
       createdAt: new Date().toISOString(),
       pointsCount: ring.length,
@@ -59,6 +64,7 @@ export const convertPointsToLineFeature = (
       coordinates: points,
     },
     properties: {
+      id: defineFeatureId("LineString"),
       name: "User drawn line",
       createdAt: new Date().toISOString(),
       pointsCount: points.length,
