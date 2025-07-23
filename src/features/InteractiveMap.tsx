@@ -100,18 +100,20 @@ function InteractiveMap({
   };
 
   const runDrawing = useCallback(() => {
-    clearLayers();
+    if (clickPoints.length) {
+      clearLayers();
+
+      const tempLineLayer = generateTempDrawLines(clickPoints);
+      const tempPointsLayer = generateTempDrawPoints(clickPoints);
+
+      if (tempLineLayer) addLayer(tempLineLayer);
+      if (tempPointsLayer) addLayer(tempPointsLayer);
+    }
 
     localFeatures.forEach((feature, i) => {
       const layer = generateFeatureLayer(feature, i);
       if (layer) addLayer(layer);
     });
-
-    const tempLineLayer = generateTempDrawLines(clickPoints);
-    const tempPointsLayer = generateTempDrawPoints(clickPoints);
-
-    if (tempLineLayer) addLayer(tempLineLayer);
-    if (tempPointsLayer) addLayer(tempPointsLayer);
   }, [localFeatures, clickPoints, addLayer, clearLayers]);
 
   useEffect(() => {

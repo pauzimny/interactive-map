@@ -145,7 +145,7 @@ export const generateGeoJSONLayer = (
     pickable: true,
     stroked: false,
     filled: true,
-    pointRadiusMinPixels: 2,
+    pointRadiusMinPixels: 4,
     getFillColor: [200, 0, 80, 180],
     getPointRadius: 100,
   });

@@ -33,10 +33,11 @@ function UploadGeoJSON({
       const data = await loadGeoJSONFromUrl(geoUrl);
 
       if ("features" in data && Array.isArray(data.features)) {
-        updateGeoJSON(data.features);
-
         const geoLayer = generateGeoJSONLayer(data);
+
         updateLayers([geoLayer]);
+
+        updateGeoJSON(data.features);
         closeDialog();
       } else {
         alert("Invalid GeoJSON data!");
