@@ -18,6 +18,7 @@ import type { TDeckLayer } from "../context/MapViewProvider";
 import DrawToolbar from "./DrawToolbar";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+
 interface InteractiveMapsProps {
   geoJSONFeatures: IGeoJSONContext["geoJSONFeatures"];
   activeFeature?: TMapFeature;
@@ -44,7 +45,7 @@ function InteractiveMap({
   setDrawingMode,
 }: InteractiveMapsProps) {
   const [clickPoints, setClickPoints] = useState<TLngLat[]>([]);
-  const [figures, setFigures] = useState<TLngLat[][]>([]);
+  const [localFeatures, setLocalFeatures] = useState(geoJSONFeatures);
 
   const isDrawingActive = activeFeature === "DRAW";
 
@@ -55,38 +56,24 @@ function InteractiveMap({
   };
 
   const handleFinishDrawing = useCallback(() => {
-    if (clickPoints.length < 2) {
-      alert("You need at least two points to finish a shape.");
-      return;
-    }
+    if (clickPoints.length < 2) return;
 
-    if (drawingMode === "POLYGON") {
-      if (clickPoints.length < 3) {
-        alert("Polygon needs at least 3 points.");
-        return;
-      }
+    const newFeature =
+      drawingMode === "POLYGON"
+        ? convertPointsToPolygonFeature(clickPoints)
+        : convertPointsToLineFeature(clickPoints);
 
-      const polygon = convertPointsToPolygonFeature(clickPoints);
-      updateGeoJSON(polygon);
-      setFigures((prev) => [
-        ...prev,
-        polygon.geometry.coordinates[0].map(
-          (coord): TLngLat => [coord[0], coord[1]]
-        ),
-      ]);
-    } else if (drawingMode === "LINE") {
-      const line = convertPointsToLineFeature(clickPoints);
-      updateGeoJSON(line);
-      setFigures((prev) => [...prev, clickPoints]); // linia nie zamykana
-    }
+    setLocalFeatures((prev) => [...prev, newFeature]);
+
+    updateGeoJSON(newFeature);
 
     setClickPoints([]);
-  }, [clickPoints, updateGeoJSON, drawingMode]);
+  }, [clickPoints, drawingMode, updateGeoJSON]);
 
   const handleClearDrawing = useCallback(() => {
     clearLayers();
     setClickPoints([]);
-    setFigures([]);
+    setLocalFeatures([]);
     updateGeoJSON(undefined);
   }, [clearLayers, updateGeoJSON]);
 
@@ -94,7 +81,6 @@ function InteractiveMap({
     if (!geoJSONFeatures.length) return alert("No geoJSON data found!");
 
     const fileName = `interactive-map-${new Date().toISOString()}.geojson`;
-
     downloadGeoJSON(geoJSONFeatures, fileName);
   }, [geoJSONFeatures]);
 
@@ -114,32 +100,27 @@ function InteractiveMap({
   };
 
   const runDrawing = useCallback(() => {
-    const clickPointLayer = generateTempDrawPoints(clickPoints);
-    const lineLayer = generateTempDrawLines(clickPoints);
-
-    const featureLayers = figures.map((coords, i) => {
-      const feature =
-        coords.length >= 3
-          ? convertPointsToPolygonFeature(coords)
-          : convertPointsToLineFeature(coords);
-
-      return generateFeatureLayer(feature, i);
-    });
-
     clearLayers();
 
-    featureLayers.forEach((layer) => {
-      if (!layer) return;
-      addLayer(layer);
+    localFeatures.forEach((feature, i) => {
+      const layer = generateFeatureLayer(feature, i);
+      if (layer) addLayer(layer);
     });
 
-    if (lineLayer) addLayer(lineLayer);
-    addLayer(clickPointLayer);
-  }, [clickPoints, figures, addLayer, clearLayers]);
+    const tempLineLayer = generateTempDrawLines(clickPoints);
+    const tempPointsLayer = generateTempDrawPoints(clickPoints);
+
+    if (tempLineLayer) addLayer(tempLineLayer);
+    if (tempPointsLayer) addLayer(tempPointsLayer);
+  }, [localFeatures, clickPoints, addLayer, clearLayers]);
 
   useEffect(() => {
     runDrawing();
   }, [runDrawing]);
+
+  useEffect(() => {
+    setLocalFeatures(geoJSONFeatures);
+  }, [geoJSONFeatures]);
 
   return (
     <>
