@@ -101,8 +101,6 @@ function InteractiveMap({
 
   const runDrawing = useCallback(() => {
     if (clickPoints.length) {
-      clearLayers();
-
       const tempLineLayer = generateTempDrawLines(clickPoints);
       const tempPointsLayer = generateTempDrawPoints(clickPoints);
 
@@ -114,7 +112,7 @@ function InteractiveMap({
       const layer = generateFeatureLayer(feature, i);
       if (layer) addLayer(layer);
     });
-  }, [localFeatures, clickPoints, addLayer, clearLayers]);
+  }, [localFeatures, clickPoints, addLayer]);
 
   useEffect(() => {
     runDrawing();
